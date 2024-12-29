@@ -1,0 +1,4 @@
+#!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
+
+brew unlink "$@"
+brew install --ignore-dependencies "$@"
