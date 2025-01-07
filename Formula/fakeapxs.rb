@@ -1,23 +1,23 @@
 class Fakeapxs < Formula
-  desc "Fake apxs for use with macOS versions after Sierra"
+  desc "Shim apxs for use with macOS versions after Sierra"
   homepage "https://github.com/CamJN/fakeapxs"
   license "Apache-2.0"
-  #head "https://github.com/CamJN/fakeapxs.git", branch: "main"
-  #sha256 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  head "file:///Users/camdennarzt/Developer/Bash/fakeapxs/", using: :git, tag: 'v0.2'
+  # head "https://github.com/CamJN/fakeapxs.git", branch: "main"
+  # sha256 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  head "file:///Users/camdennarzt/Developer/Bash/fakeapxs/", using: :git, tag: "v0.2"
 
-  uses_from_macos "apache2"
+  # uses_from_macos "apache2"
 
   def install
     inreplace "fakeapxs", "config_vars.mk >", "#{pkgshare}/config_vars.mk >"
 
-    ["apr-config","apu-config","fakeapxs"].each do |file|
-      FileUtils.chmod "ugo+x", buildpath/file
+    ["apr-config", "apu-config", "fakeapxs"].each do |file|
+      chmod "ugo+x", buildpath/file
       bin.install file
     end
     libexec.mkpath
     libexec.install buildpath/"libtool"
-    FileUtils.chmod "ugo+x", libexec/"libtool"
+    chmod "ugo+x", libexec/"libtool"
 
     pkgshare.install "config_vars.mk"
   end

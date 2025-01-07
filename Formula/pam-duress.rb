@@ -1,6 +1,6 @@
 # Alt: https://github.com/rafket/pam_duress
 class PamDuress < Formula
-  desc "A pam module to run commands in duress situations"
+  desc "Pam module for running commands in duress situations"
   homepage "https://github.com/nuvious/pam-duress"
   license "LGPL-3.0-or-later"
   head "https://github.com/nuvious/pam-duress.git", branch: "main"
@@ -10,7 +10,7 @@ class PamDuress < Formula
 
   def install
     inreplace "Makefile" do |s|
-      s.gsub! '/usr/local', prefix
+      s.gsub! "/usr/local", prefix
     end
 
     system "make", "CC=clang", "PAM_DIR=pam"
