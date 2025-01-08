@@ -1,7 +1,7 @@
 class Vobsub2srt < Formula
   desc "Convert idx/sub subtitles to srt using OCR"
   homepage "https://github.com/ruediger/VobSub2SRT"
-  head "https://github.com/ruediger/VobSub2SRT.git", using: :git
+  head "https://github.com/ruediger/VobSub2SRT.git", branch: "master"
 
   depends_on "cmake"
   depends_on "ffmpeg"
