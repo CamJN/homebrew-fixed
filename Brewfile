@@ -90,7 +90,7 @@ mas "Reeder", id: 1529448980
 # mas "Xcode", id: 497799835
 # mas "Apple Configurator 2", id: 1037126344
 
-cask_args appdir: '/Applications', require_sha: true, language: 'en-CA'
+cask_args appdir: "/Applications", require_sha: true, language: "en-CA"
 
 # cask 'sketch' # cannot use latest version with my license... https://download.sketch.com/sketch-75-129697.zip
 cask "1password-cli"

@@ -1,9 +1,9 @@
+# https://raw.githubusercontent.com/Homebrew/homebrew-core/refs/heads/master/Formula/p/php.rb
 class TinyPhp < Formula
   desc "General-purpose scripting language"
   homepage "https://www.php.net/"
-  # Should only be updated if the new version is announced on the homepage, https://www.php.net/
   url Formula["php"].stable.url
-  mirror Formula["php"].stable.mirrors.first
+  mirror Formula["php"].stable.mirrors.first # rubocop:disable FormulaAudit/Urls,Style/DisableCopsWithinSourceCodeDirective
   sha256 Formula["php"].stable.checksum.hexdigest
   license "PHP-3.01"
 
@@ -19,14 +19,11 @@ class TinyPhp < Formula
     depends_on "re2c" => :build # required to generate PHP lexers
   end
 
-  conflicts_with "php", because: 'This is just a better integrated php'
-
   depends_on "pkg-config" => :build
   depends_on "argon2"
   depends_on "aspell"
   depends_on "autoconf"
-  depends_on "freetds" => :optional
-  depends_on "gd" => :recommended
+  depends_on "fakeapxs"
   depends_on "gettext"
   depends_on "gmp"
   depends_on "icu4c"
@@ -34,22 +31,23 @@ class TinyPhp < Formula
   depends_on "libsodium"
   depends_on "libzip"
   depends_on "oniguruma"
-  depends_on "openldap" => :optional
   depends_on "openssl@3"
   depends_on "pcre2"
   depends_on "unixodbc"
-  depends_on "fakeapxs"
+  depends_on "gd" => :recommended
+  depends_on "freetds" => :optional
+  depends_on "openldap" => :optional
 
-  uses_from_macos "tidy-html5"
-  uses_from_macos "krb5"
-  uses_from_macos "curl"
-  uses_from_macos "sqlite"
+  # uses_from_macos "tidy-html5"
   uses_from_macos "xz" => :build
   uses_from_macos "bzip2"
+  uses_from_macos "curl"
+  uses_from_macos "krb5"
   uses_from_macos "libedit"
   uses_from_macos "libffi", since: :catalina
   uses_from_macos "libxml2"
   uses_from_macos "libxslt"
+  uses_from_macos "sqlite"
   uses_from_macos "zlib"
 
   on_macos do
@@ -57,6 +55,8 @@ class TinyPhp < Formula
     # see https://github.com/php/php-src/issues/10680
     patch :DATA
   end
+
+  conflicts_with "php", because: "a better integrated php than HomeBrew provides"
 
   def install
     # buildconf required due to system library linking bug patch
@@ -295,9 +295,12 @@ class TinyPhp < Formula
     end
   end
 
+  def identity
+    i = `security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve ' valid identit'`
+    i.lines.last.strip || "code signing authority here"
+  end
+
   def caveats
-    identity = `security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve ' valid identit'`.lines.last.strip || ""
-    identity = "code signing authority here" if identity.empty?
     <<~EOS
       To enable PHP in Apache:
         Codesign the php apache extension:
@@ -329,8 +332,11 @@ class TinyPhp < Formula
   end
 
   test do
-    assert_match(/^Zend OPcache$/, shell_output("#{bin}/php -d zend_extension=#{Dir[opt_lib/"php/*/opcache.so"].first} -i"),
-      "Zend OPCache extension not loaded")
+    assert_match(
+      /^Zend OPcache$/,
+      shell_output("#{bin}/php -d zend_extension=#{Dir[opt_lib/"php/*/opcache.so"].first} -i"),
+      "Zend OPCache extension not loaded",
+    )
     # Test related to libxml2 and
     # https://github.com/Homebrew/homebrew-core/issues/28398
     assert_includes (bin/"php").dynamically_linked_libraries,
@@ -348,7 +354,7 @@ class TinyPhp < Formula
 
       expected_output = /^Hello world!$/
 
-      function = build.with?("openldap")? 'ldap_connect()' : 'phpinfo()'
+      function = build.with?("openldap")? "ldap_connect()" : "phpinfo()"
 
       (testpath/"index.php").write <<~PHP
         <?php
