@@ -295,8 +295,8 @@ class TinyPhp < Formula
   end
 
   def identity
-    i = `security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve ' valid identit'`
-    i.lines.last.strip || "code signing authority here"
+    i = `security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve ' valid identit' -e ' CA'`
+    i.lines.last&.strip || "code signing authority here"
   end
 
   def caveats
@@ -375,7 +375,7 @@ class TinyPhp < Formula
       (testpath/"httpd.conf").write <<~EOS
         #{main_config}
         LoadModule mpm_prefork_module libexec/apache2/mod_mpm_prefork.so
-        LoadModule php_module #{lib}/httpd/modules/libphp.so "#{`security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve ' valid identit' -e ' CA'`.strip}"
+        LoadModule php_module #{lib}/httpd/modules/libphp.so "#{identity}"
         <FilesMatch \\.(php|phar)$>
           SetHandler application/x-httpd-php
         </FilesMatch>
