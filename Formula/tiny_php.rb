@@ -19,17 +19,17 @@ class TinyPhp < Formula
     depends_on "re2c" => :build # required to generate PHP lexers
   end
 
-  depends_on "pkg-config" => :build
+  depends_on "pkgconf" => :build
   depends_on "argon2"
-  depends_on "aspell"
   depends_on "autoconf"
   depends_on "fakeapxs"
   depends_on "gettext"
   depends_on "gmp"
-  depends_on "icu4c"
+  depends_on "icu4c@76"
   depends_on "libpq"
   depends_on "libsodium"
   depends_on "libzip"
+  depends_on "net-snmp"
   depends_on "oniguruma"
   depends_on "openssl@3"
   depends_on "pcre2"
@@ -38,7 +38,6 @@ class TinyPhp < Formula
   depends_on "freetds" => :optional
   depends_on "openldap" => :optional
 
-  # uses_from_macos "tidy-html5"
   uses_from_macos "xz" => :build
   uses_from_macos "bzip2"
   uses_from_macos "curl"
@@ -48,6 +47,7 @@ class TinyPhp < Formula
   uses_from_macos "libxml2"
   uses_from_macos "libxslt"
   uses_from_macos "sqlite"
+  uses_from_macos "tidy-html5" # rubocop:disable FormulaAudit/UsesFromMacos,Style/DisableCopsWithinSourceCodeDirective
   uses_from_macos "zlib"
 
   on_macos do
@@ -146,7 +146,6 @@ class TinyPhp < Formula
       --with-gettext=#{Formula["gettext"].opt_prefix}
       --with-gmp=#{Formula["gmp"].opt_prefix}
       --with-iconv#{headers_path}
-      --with-kerberos
       --with-layout=GNU
       --with-libxml
       --with-libedit
@@ -162,7 +161,7 @@ class TinyPhp < Formula
       --with-pdo-sqlite
       --with-pgsql=#{Formula["libpq"].opt_prefix}
       --with-pic
-      --with-pspell=#{Formula["aspell"].opt_prefix}
+      --with-snmp=#{Formula["net-snmp"].opt_prefix}
       --with-sodium
       --with-sqlite3
       --with-tidy#{headers_path}
@@ -345,9 +344,6 @@ class TinyPhp < Formula
     system "#{sbin}/php-fpm", "-t"
     system bin/"phpdbg", "-V"
     system bin/"php-cgi", "-m"
-    # Prevent SNMP extension to be added
-    refute_match(/^snmp$/, shell_output("#{bin}/php -m"),
-      "SNMP extension doesn't work reliably with Homebrew on High Sierra")
     begin
       port = free_port
       port_fpm = free_port
@@ -360,6 +356,8 @@ class TinyPhp < Formula
         <?php
         echo 'Hello world!' . PHP_EOL;
         var_dump(#{function});
+        $session = new SNMP(SNMP::VERSION_1, '127.0.0.1', 'public');
+        var_dump(@$session->get('sysDescr.0'));
       PHP
       main_config = <<~EOS
         Listen #{port}
@@ -480,4 +478,3 @@ index 36c6e5e3e2..71b1a16607 100644
  PHP_ARG_ENABLE([rpath],
    [whether to enable runpaths],
    [AS_HELP_STRING([--disable-rpath],
-
