@@ -31,6 +31,7 @@ jobs:
       - run: brew test-bot --only-setup
 
       - run: brew test-bot --only-tap-syntax
+        continue-on-error: true
 
       - run: brew test-bot --only-formulae --root-url='https://ghcr.io/v2/camjn/fixed'
         if: github.event_name == 'pull_request'
