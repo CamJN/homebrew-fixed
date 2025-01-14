@@ -1,0 +1,30 @@
+#########################################################################
+# brew bottle-outdated & force-upgrade completion
+#########################################################################
+
+# derived from:
+# https://raw.githubusercontent.com/Homebrew/homebrew-services/refs/heads/master/completions/bash/brew-services
+# https://raw.githubusercontent.com/Homebrew/brew/refs/heads/master/completions/bash/brew
+
+# Called once on shell startup
+: "${HOMEBREW_PREFIX:=$(brew --prefix)}"
+
+# Called by bash to generate completions
+_brew_with_additional_commands() {
+    if [ "$COMP_CWORD" -gt 1 ]; then
+        case "${COMP_WORDS[1]}" in
+            "bottle-outdated")
+                mapfile -t _brew_macos_versions < <(brew ruby -e 'puts MacOSVersion::SYMBOLS.keys')
+                # `< <()` is used to avoid a subshell when setting COMPREPLY, a pipe will make a subshell
+                mapfile -t COMPREPLY < <(compgen -W "${_brew_macos_versions[*]/ /_}" -- "${COMP_WORDS[COMP_CWORD]}")
+                return;;
+            "force-upgrade")
+                __brew_complete_outdated_formulae;
+                return;;
+        esac
+    fi
+    _brew
+}
+
+# this can only fallback to the default brew completion, hopefully it will be enough
+complete -o bashdefault -o default -F _brew_with_additional_commands brew
