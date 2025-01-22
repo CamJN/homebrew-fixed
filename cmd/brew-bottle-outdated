@@ -5,4 +5,4 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-brew ruby -- -ne 'puts Formula.installed.select{|f|f.bottle_for_tag(Utils::Bottles::Tag.from_symbol($_.strip.to_sym)).nil?}.map(&:name)' <<< "$@"
+brew ruby -- -ne 'puts Formula.installed.select{|f|f.bottle_for_tag(Utils::Bottles::Tag.from_symbol($_.strip.to_sym)).nil?}.select{|f|Tab.for_formula(f).poured_from_bottle}.map(&:name)' <<< "$@"
