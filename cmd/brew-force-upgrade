@@ -1,4 +1,17 @@
 #!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
 
-brew unlink "$@"
-brew install --ignore-dependencies "$@"
+IFS='|'
+readarray -t pinned < <(brew ls --pinned | grep -Exe "$*")
+unset IFS
+
+readarray -t unpinned < <(printf '%s\n' "$@" "${pinned[@]}" | sort | uniq -u)
+
+if [ "${#unpinned[@]}" -gt 0 ]; then
+brew unlink "$unpinned"
+brew install --ignore-dependencies "$unpinned"
+fi
+if [ "${#pinned[@]}" -gt 0 ]; then
+brew unpin "$pinned"
+brew upgrade "$pinned"
+brew pin "$pinned"
+fi
