@@ -7,11 +7,11 @@ unset IFS
 readarray -t unpinned < <(printf '%s\n' "$@" "${pinned[@]}" | sort | uniq -u)
 
 if [ "${#unpinned[@]}" -gt 0 ]; then
-brew unlink "$unpinned"
-brew install --ignore-dependencies "$unpinned"
+brew unlink "$unpinned[@]"
+brew install --ignore-dependencies "$unpinned[@]"
 fi
 if [ "${#pinned[@]}" -gt 0 ]; then
-brew unpin "$pinned"
-brew upgrade "$pinned"
-brew pin "$pinned"
+brew unpin "${pinned[@]}"
+brew upgrade "$pinned[@]"
+brew pin "$pinned[@]"
 fi
