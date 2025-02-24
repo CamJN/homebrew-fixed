@@ -7,6 +7,8 @@ tap "phusion/passenger"
 # untap "homebrew/core"
 # untap "homebrew/services"
 
+brew "aspell"
+brew "actionlint"
 brew "bash"
 brew "bash-completion@2"
 brew "bash-git-prompt"
@@ -80,6 +82,7 @@ brew "wasm-pack"
 brew "wget"
 brew "xz"
 brew "yaml-language-server"
+brew "yt-dlp"
 
 mas "1Blocker", id: 1365531024
 mas "Keynote", id: 409183694
