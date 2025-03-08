@@ -4,7 +4,8 @@ class TinyPhp < Formula
   homepage "https://www.php.net/"
   url Formula["php"].stable.url
   Formula["php"].stable.mirrors.each do |m|
-    mirror m
+    # RUBOCOP: Disabled because homebrew is stupid
+    mirror m # rubocop:disable FormulaAudit/Urls,Style/DisableCopsWithinSourceCodeDirective
   end
   sha256 Formula["php"].stable.checksum.hexdigest
   license "PHP-3.01"
@@ -49,6 +50,7 @@ class TinyPhp < Formula
   uses_from_macos "libxml2"
   uses_from_macos "libxslt"
   uses_from_macos "sqlite"
+  # RUBOCOP: Disabled because homebrew is stupid
   uses_from_macos "tidy-html5" # rubocop:disable FormulaAudit/UsesFromMacos,Style/DisableCopsWithinSourceCodeDirective
   uses_from_macos "zlib"
 

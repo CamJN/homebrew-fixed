@@ -6,7 +6,8 @@ class Fakeapxs < Formula
   license "Apache-2.0"
   head "https://github.com/CamJN/fakeapxs.git", branch: "main"
 
-  uses_from_macos "httpd"
+  # RUBOCOP: Disabled because homebrew is stupid
+  uses_from_macos "httpd" # rubocop:disable FormulaAudit/UsesFromMacos,Style/DisableCopsWithinSourceCodeDirective
 
   def install
     inreplace "fakeapxs", "config_vars.mk >", "#{pkgshare}/config_vars.mk >"
