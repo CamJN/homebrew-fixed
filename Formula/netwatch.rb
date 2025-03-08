@@ -20,9 +20,9 @@ class Netwatch < Formula
 
   def caveats
     <<~EOS
-        To configure netwatch for all users, edit the script at #{etc}/netwatchrc.
-        To configure netwatch for your user only, create a script at ~/.netwatchrc.
-        To disable individual netwatch scripts, remove the line that sources ~/.netwatchrc from #{etc}/netwatchrc.
+      To configure netwatch for all users, edit the script at #{etc}/netwatchrc.
+      To configure netwatch for your user only, create a script at ~/.netwatchrc.
+      To disable individual netwatch scripts, remove the line that sources ~/.netwatchrc from #{etc}/netwatchrc.
     EOS
   end
 
