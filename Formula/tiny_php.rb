@@ -3,7 +3,9 @@ class TinyPhp < Formula
   desc "General-purpose scripting language"
   homepage "https://www.php.net/"
   url Formula["php"].stable.url
-  mirror Formula["php"].stable.mirrors.first # rubocop:disable FormulaAudit/Urls,Style/DisableCopsWithinSourceCodeDirective
+  Formula["php"].stable.mirrors.each do |m|
+    mirror m
+  end
   sha256 Formula["php"].stable.checksum.hexdigest
   license "PHP-3.01"
 
