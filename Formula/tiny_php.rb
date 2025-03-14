@@ -301,17 +301,70 @@ class TinyPhp < Formula
     end
   end
 
+  def identity?
+    `security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve " valid identit" -e " CA" | tail -n1 | tr -d "\n"`
+  end
+
   def identity
-    i = `security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve ' valid identit' -e ' CA'`
-    i.lines.last&.strip || "code signing authority here"
+    identity? || "Personal"
+  end
+
+  def make_identity
+    return if identity?
+    <<-EOS
+      
+  Create a code signing authority:
+    cat << EOF > cert_config.cnf
+      [ req ]
+      default_bits = 2048
+      prompt = no
+      default_md = sha256
+      distinguished_name = req_distinguished_name
+      req_extensions = req_ext
+
+      [ req_distinguished_name ]
+      CN = #{identity}
+
+      [ req_ext ]
+      keyUsage = critical, digitalSignature, keyEncipherment
+      extendedKeyUsage = codeSigning
+    EOF
+
+    openssl req -new -newkey rsa:2048 -nodes -keyout personal-ca.key -out personal-ca.csr -config cert_config.cnf
+    openssl x509 -req -in personal-ca.csr -signkey personal-ca.key -out personal-ca.crt -days 3650 -extensions req_ext -extfile cert_config.cnf
+
+    while [ -z "$MY_PASSWORD" ]; do
+      read -sr MY_PASSWORD -p 'Choose a password to protect your keychain: '
+    done
+
+    sudo security authorizationdb write com.apple.trust-settings.admin allow
+
+    security create-keychain -p "$MY_PASSWORD" #{keychain}.keychain
+    security set-keychain-settings -lut $((6 * 60 * 60)) #{keychain}.keychain
+    security unlock-keychain -p "$MY_PASSWORD" #{keychain}.keychain
+    security import personal-ca.key -k #{keychain}.keychain -A
+    security set-key-partition-list -S apple-tool:,apple: -k "$MY_PASSWORD" #{keychain}.keychain
+    security add-trusted-cert -d -r trustRoot -k #{keychain}.keychain personal-ca.crt
+
+    sudo security authorizationdb write com.apple.trust-settings.admin admin
+    rm personal-ca.{crt,key,csr}
+    EOS
+  end
+
+  def keychain
+    identity? ? "login" : "mykeychain"
+  end
+
+  def codesign
+    %Q{codesign -s "#{identity}" --keychain ~/Library/Keychains/#{keychain}.keychain-db #{opt_lib}/httpd/modules/libphp.so}
   end
 
   def caveats
     <<~EOS
-      To enable PHP in Apache:
+      To enable PHP in Apache:#{make_identity}
         Codesign the php apache extension:
 
-          codesign -s "#{identity}" --keychain ~/Library/Keychains/login.keychain-db #{opt_lib}/httpd/modules/libphp.so
+          #{codesign}
 
         Add the following to httpd.conf and restart Apache:
 
@@ -321,10 +374,10 @@ class TinyPhp < Formula
               SetHandler application/x-httpd-php
           </FilesMatch>
 
-      Finally, check DirectoryIndex includes index.php
+        Finally, check DirectoryIndex includes index.php
           DirectoryIndex index.php index.html
 
-      The php.ini and php-fpm.ini file can be found in:
+        The php.ini and php-fpm.ini file can be found in:
           #{etc}/php/#{version.major_minor}/
     EOS
   end
