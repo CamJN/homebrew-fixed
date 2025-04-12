@@ -1,0 +1,6 @@
+#!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
+
+formula="$1"
+letter="${formula:0:1}"
+
+curl -sSL "https://raw.githubusercontent.com/Homebrew/homebrew-core/refs/heads/master/Formula/$letter/$formula.rb"
