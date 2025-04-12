@@ -312,7 +312,7 @@ class TinyPhp < Formula
   def make_identity
     return if identity?
     <<-EOS
-      
+
   Create a code signing authority:
     cat << EOF > cert_config.cnf
       [ req ]
@@ -374,10 +374,10 @@ class TinyPhp < Formula
               SetHandler application/x-httpd-php
           </FilesMatch>
 
-        Finally, check DirectoryIndex includes index.php
+      Finally, check DirectoryIndex includes index.php
           DirectoryIndex index.php index.html
 
-        The php.ini and php-fpm.ini file can be found in:
+      The php.ini and php-fpm.ini file can be found in:
           #{etc}/php/#{version.major_minor}/
     EOS
   end
