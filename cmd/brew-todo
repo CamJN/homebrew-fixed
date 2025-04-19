@@ -1,0 +1,24 @@
+#!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
+
+outdated="$(brew outdated --json=v2)"
+# shellcheck disable=SC2016
+output='.[$type].[] | "\(.name) (\(.installed_versions | join(", "))) < \(.current_version): \($descriptions[.name])"'
+
+function show_outdated {
+    type="$1"
+    if [ "$(jq -r ".$type | length" <<< "$outdated")" -gt 0 ]; then
+        echo "Outdated $type:"
+    else
+        return 0
+    fi
+    descriptions=$(for pkg in $(jq --arg "$type" -r '.[$type].[].name' <<< "$outdated"); do
+                       echo "$pkg"
+                       brew desc "$pkg" | cut -d: -f 2- | xargs # xargs used to trim string
+                   done | jq -n -R 'reduce inputs as $i ({}; . + { ($i): input })')
+
+    jq --argjson descriptions "$descriptions" --arg type "$type" -r "$output" <<< "$outdated"
+}
+
+show_outdated formulae
+
+show_outdated casks
