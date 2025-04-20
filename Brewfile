@@ -1,10 +1,10 @@
 tap "camjn/fixed", "git@github.com:CamJN/homebrew-fixed.git"
 tap "getargv/tap", "git@github.com:getargv/homebrew-tap.git"
-tap "homebrew/bundle"
 tap "oven-sh/bun"
 tap "phusion/passenger"
 
 # untap "homebrew/core"
+# untap "homebrew/bundle"
 # untap "homebrew/services"
 
 brew "aspell"
