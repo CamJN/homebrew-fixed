@@ -28,7 +28,7 @@ class TinyPhp < Formula
   depends_on "fakeapxs"
   depends_on "gettext"
   depends_on "gmp"
-  depends_on "icu4c@76"
+  depends_on "icu4c@77"
   depends_on "libpq"
   depends_on "libsodium"
   depends_on "libzip"
