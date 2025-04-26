@@ -11,7 +11,7 @@ function show_outdated {
     else
         return 0
     fi
-    descriptions=$(for pkg in $(jq --arg "$type" -r '.[$type].[].name' <<< "$outdated"); do
+    descriptions=$(for pkg in $(jq --arg type "$type" -r '.[$type].[].name' <<< "$outdated"); do
                        echo "$pkg"
                        brew desc "$pkg" | cut -d: -f 2- | xargs # xargs used to trim string
                    done | jq -n -R 'reduce inputs as $i ({}; . + { ($i): input })')
