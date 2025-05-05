@@ -2,16 +2,16 @@
 
 outdated="$(brew outdated --json=v2)"
 # shellcheck disable=SC2016
-output='.[$type].[] | "\(.name) (\(.installed_versions | join(", "))) < \(.current_version):\($descriptions[.name])"'
+output='.[$type].[] | "\(.name)\t(\(.installed_versions | join(", "))) < \(.current_version):\($descriptions[.name])"'
 
 function desc {
     local type="$1"
     local name="${2##*/}"
     echo "$2"
     if [ "$type" = "formulae" ]; then
-        awk '/desc/{$1="";print $0}' "${HOMEBREW_PREFIX}/opt/${name}/.brew/${name}.rb" | tr -d '"'
+        awk '/desc/{$1="";print $0}' "${HOMEBREW_PREFIX}/opt/${name}/.brew/${name}.rb" | tr -d '"' | sed -e 's/^ /\t/'
     else
-        awk '/desc/{$1="";print $0}' "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/"*/*"/Casks/${name}.rb" | tr -d '"'
+        awk '/desc/{$1="";print $0}' "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/"*/*"/Casks/${name}.rb" | tr -d '"' | sed -e 's/^ /\t/'
     fi
 }
 
@@ -25,7 +25,7 @@ function show_outdated {
     #slow: descriptions=$(jq --arg type "$type" -r '.[$type].[].name' <<< "$outdated" | xargs brew desc "--${type}" | tr ':' '\n' | jq -n -R 'reduce inputs as $i ({}; . + { ($i): input })')
     descriptions=$(jq --arg type "$type" -r '.[$type].[].name' <<< "$outdated" | while read -r name; do desc "$type" "$name"; done | jq -n -R 'reduce inputs as $i ({}; . + { ($i): input })')
 
-    jq --argjson descriptions "$descriptions" --arg type "$type" -r "$output" <<< "$outdated"
+    jq --argjson descriptions "$descriptions" --arg type "$type" -r "$output" <<< "$outdated" | column -ts $'\t'
 }
 
 show_outdated formulae
