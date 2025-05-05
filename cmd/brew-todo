@@ -6,8 +6,8 @@ output='.[$type].[] | "\(.name) (\(.installed_versions | join(", "))) < \(.curre
 
 function desc {
     local type="$1"
-    local name="$2"
-    echo "$name"
+    local name="${2##*/}"
+    echo "$2"
     if [ "$type" = "formulae" ]; then
         awk '/desc/{$1="";print $0}' "${HOMEBREW_PREFIX}/opt/${name}/.brew/${name}.rb" | tr -d '"'
     else
