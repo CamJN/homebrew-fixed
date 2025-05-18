@@ -2,7 +2,7 @@
 
 outdated="$(brew outdated --json=v2)"
 # shellcheck disable=SC2016
-output='.[$type].[] | "\(.name)\t(\(.installed_versions | join(", "))) < \(.current_version):\($descriptions[.name])"'
+output='.[$type].[] | "\(.name)\t(\(.installed_versions | join(", "))) < \(.current_version)\(if .pinned then " [pinned at: " + .pinned_version + "]" end):\($descriptions[.name])"'
 
 function desc {
     local type="$1"
