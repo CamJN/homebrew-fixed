@@ -1,5 +1,10 @@
 #!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
 
+if [ $# -eq 0]; then
+   echo "You forgot to specify a formula" >&2
+   exit -1
+fi
+
 IFS='|'
 readarray -t pinned < <(brew ls --pinned | grep -Exe "$*")
 unset IFS
