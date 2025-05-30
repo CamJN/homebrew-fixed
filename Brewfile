@@ -8,7 +8,6 @@ tap "phusion/passenger"
 # untap "homebrew/services"
 
 brew "aspell"
-brew "actionlint"
 brew "bash"
 brew "bash-completion@2"
 brew "bash-git-prompt"
@@ -36,6 +35,7 @@ brew "eza"
 brew "fd"
 brew "ffmpeg"
 brew "geckodriver"
+brew "gem-completion"
 brew "getargv/tap/getargv"
 brew "getargv/tap/libgetargv"
 brew "gh" # required by brew itself
@@ -50,8 +50,9 @@ brew "hyperfine"
 brew "jless"
 brew "llvm"
 brew "mailpit"
-brew "mas"
+brew "mas" # required by brew itself
 brew "maven"
+brew "maven-completion"
 brew "nginx"
 brew "nmap"
 brew "node"
@@ -68,11 +69,15 @@ brew "pngcrush"
 brew "postgresql@17", link: true
 brew "pyright"
 brew "python@3.13"
+brew "rails-completion"
+brew "rake-completion"
 brew "rbenv"
 brew "rbenv-default-gems"
 brew "ripgrep"
 brew "ruby-build"
+brew "ruby-completion"
 brew "rust-analyzer"
+brew "rustc-completion"
 brew "rustup"
 brew "shellcheck"
 brew "swift-format"
@@ -96,7 +101,7 @@ mas "Reeder", id: 1529448980
 cask_args appdir: "/Applications", require_sha: true, language: "en-CA"
 
 # cask 'sketch' # cannot use latest version with my license... https://download.sketch.com/sketch-75-129697.zip
-# cask "vmware-fusion" # removed due to broadcom requiring a login
+cask "vmware-fusion" # removed due to broadcom requiring a login
 cask "1password-cli"
 # 1password 8 is electron crap
 cask "1password@7"
