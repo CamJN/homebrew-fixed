@@ -7,7 +7,9 @@ brew leaves | grep -Fxvf <(awk '/^brew /{print $2}' "$HOMEBREW_BUNDLE_FILE" | tr
 
 if [[ ${#junk_packages[@]} -gt 0 ]]; then
     echo "Uninstall:"
-    echo "${junk_packages[@]}"
+    echo "brew uninstall ${junk_packages[*]}"
+    echo -e "\nOr add to Brewfile:"
+    echo "brew bundle add ${junk_packages[*]}"
 fi
 
 declare -a dep_packages
@@ -15,5 +17,15 @@ brew list --installed-on-request | grep -Fxvf <(awk '/^brew /{print $2}' "$HOMEB
 
 if [[ ${#dep_packages[@]} -gt 0 ]]; then
     echo -e "\nMark as dependency:"
-    echo "brew tab --no-installed-on-request ${dep_packages[@]}"
+    echo "brew tab --no-installed-on-request ${dep_packages[*]}"
+fi
+
+declare -a deps_in_brewfile
+brew ls --installed-as-dependency | grep -Fvxf <(brew ls --installed-on-request) | grep -Fxf <(awk '/^brew /{print $2}' "$HOMEBREW_BUNDLE_FILE" | tr -d '",') | mapfile -t deps_in_brewfile
+
+if [[ ${#deps_in_brewfile[@]} -gt 0 ]]; then
+    echo -e "\nRemove from Brewfile:"
+    echo "brew bundle remove ${deps_in_brewfile[*]}"
+    echo -e "\nOr mark as installed-on-request:"
+    echo "brew tab --installed-on-request ${deps_in_brewfile[*]}"
 fi
