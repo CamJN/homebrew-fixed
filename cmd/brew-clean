@@ -1,13 +1,8 @@
 #!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
 #/usr/local/bin/brew-clean
 
-td=$(mktemp -d -t brew-clean.XXXXXXXXXXX)
-cd "$td"
-mkfifo f1
-uptime=$(sysctl -n kern.boottime | grep -oe '{.*}' | tr , '\n' | tr -d '{ }' | grep -Fve 'usec' | cut -d= -f 2)
+boottime=$(sysctl -n kern.boottime | sed -e 's/.* sec *= *\([0-9][0-9]*\).*/\1/')
+output='map({name:.name, installed:.installed | max_by(.time).time})[] | select(.installed > ($boottime|tonumber)) | .name'
+count=$(tr -dc '/' <<< "$HOMEBREW_CELLAR/" | wc -c)
 
-grep -Ff <(brew list --pinned) < f1 | cut -d/ -f5 | uniq | xargs brew info --json --formulae | jq --raw-output 'map({name:.name, installed:.installed | max_by(.time).time})[] | select(.installed > '"$uptime"') | .name' | xargs echo "pinned formulae found:" & p1_pid=$!
-
-brew cleanup -n | grep -Fve "$HOME/Library/Caches" -e "$HOME/Library/Logs/Homebrew" | tee f1
-
-wait $p1_pid
+brew cleanup -n | grep -Fe "$HOMEBREW_CELLAR/" | tee /dev/stderr | cut -d/ -f$((count + 1)) | grep -Fxf <(brew list --pinned) | sort -u | xargs brew info --json --formulae | jq --arg boottime "$boottime" --raw-output "$output" | xargs echo "pinned formulae found:"
