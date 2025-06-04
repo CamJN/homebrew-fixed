@@ -1,0 +1,4 @@
+#!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
+#/usr/local/bin/brew-clean-safe
+
+brew list --multiple --versions | cut -w -f1 | grep -Fxvf <(brew list --pinned) | xargs brew cleanup
