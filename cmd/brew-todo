@@ -10,10 +10,10 @@ function desc {
     echo "$2"
     if [ "$type" = "formulae" ]; then
         awk '$1 == "desc" {$1="";print $0}' "${HOMEBREW_PREFIX}/opt/${name}/.brew/${name}.rb" | tr -d '"' | sed -e 's/^ /\t/'
-    elif compgen -G "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/"*/*"/Casks/${name}.json" >/dev/null; then
-        jq -r '.desc' "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/"*/*"/Casks/${name}.json" | sed -e 's/^/\t/'
+    elif file="$(compgen -G "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/*/*/Casks/${name}.json")"; then
+        jq -r '.desc' "$file" | sed -e 's/^/\t/'
     else
-        awk '$1 == "desc" {$1="";print $0}' "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/"*/*"/Casks/${name}.rb" | tr -d '"' | sed -e 's/^ /\t/'
+        awk '$1 == "desc" {$1="";print $0}' "$(compgen -G "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/*/*/Casks/${name}.rb")" | tr -d '"' | sed -e 's/^ /\t/'
     fi
 }
 

@@ -2,6 +2,7 @@
 #/usr/local/bin/brew-clean
 
 boottime=$(sysctl -n kern.boottime | sed -e 's/.* sec *= *\([0-9][0-9]*\).*/\1/')
+# shellcheck disable=SC2016
 output='map({name:.name, installed:.installed | max_by(.time).time})[] | select(.installed > ($boottime|tonumber)) | .name'
 count=$(tr -dc '/' <<< "$HOMEBREW_CELLAR/" | wc -c)
 
