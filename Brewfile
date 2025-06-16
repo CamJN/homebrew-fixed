@@ -122,3 +122,6 @@ cask "blender"
 # cask 'dolphin'
 cask "firefox@developer-edition", args: { require_sha: false }
 cask "tower"
+
+#require "rbconfig"
+#cask "container" RbConfig::CONFIG['host_cpu'] == 'arm64' # I'd prefer a formula... like swiftly
