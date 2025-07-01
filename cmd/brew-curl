@@ -1,6 +1,33 @@
 #!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
 
-formula="$1"
-letter="${formula:0:1}"
+if [ "$1" = '--cask' ] || [ "$1" = '--casks' ]; then
+type=casks
+shift
+elif [ "$1" = '--formula' ] || [ "$1" = '--formulae' ]; then
+type=formulae
+shift
+fi
 
-curl -sSL "https://raw.githubusercontent.com/Homebrew/homebrew-core/refs/heads/master/Formula/$letter/$formula.rb"
+declare json=$(brew info "$1" --json=v2)
+
+function toPath() {
+# jq --exit-status --raw-output --arg type "$1" '.[$type][0].ruby_source_path' <<< "$json" # use exit status not empty checks
+jq --raw-output --arg type "$1" '.[$type][0].ruby_source_path // ""' <<< "$json"
+}
+
+declare path
+if [ "$type" != 'casks' ]; then
+path=$(toPath formulae)
+fi
+if [ "$type" = 'casks' ] || [ -z "$path" ]; then
+type=casks
+path=$(toPath casks)
+fi
+
+if [ -n "$path" ]; then
+if [ "$type" = 'casks' ]; then
+curl -sSL "https://raw.githubusercontent.com/Homebrew/homebrew-cask/refs/heads/master/$path"
+else
+curl -sSL "https://raw.githubusercontent.com/Homebrew/homebrew-core/refs/heads/master/$path"
+fi
+fi
