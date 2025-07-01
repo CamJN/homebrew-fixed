@@ -114,7 +114,7 @@ mas "Reeder", id: 1529448980
 cask_args appdir: "/Applications", require_sha: true, language: "en-CA"
 
 # cask 'sketch' # cannot use latest version with my license... https://download.sketch.com/sketch-75-129697.zip
-cask "vmware-fusion" # removed due to broadcom requiring a login
+# cask "vmware-fusion" # removed due to broadcom requiring a login
 cask "1password-cli"
 # 1password 8 is electron crap
 cask "1password@7"
