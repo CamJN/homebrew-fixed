@@ -51,7 +51,7 @@ class TinyPhp < Formula
   uses_from_macos "libxslt"
   uses_from_macos "sqlite"
   # RUBOCOP: Disabled because homebrew is stupid
-  uses_from_macos "tidy-html5" # rubocop:disable FormulaAudit/UsesFromMacos,Style/DisableCopsWithinSourceCodeDirective
+  uses_from_macos "tidy-html5", since: :tahoe # rubocop:disable FormulaAudit/UsesFromMacos,Style/DisableCopsWithinSourceCodeDirective
   uses_from_macos "zlib"
 
   on_macos do
@@ -96,7 +96,7 @@ class TinyPhp < Formula
     ENV["lt_cv_path_SED"] = "sed"
 
     # Identify build provider in php -v output and phpinfo()
-    ENV["PHP_BUILD_PROVIDER"] = tap.user
+    ENV["PHP_BUILD_PROVIDER"] = tap&.user || ENV["USER"]
 
     # system pkg-config missing
     ENV["KERBEROS_CFLAGS"] = " "
@@ -112,6 +112,8 @@ class TinyPhp < Formula
     # Each extension that is built on Mojave needs a direct reference to the
     # sdk path or it won't find the headers
     headers_path = "=#{MacOS.sdk_path_if_needed}/usr" if OS.mac?
+
+    tidy_path = MacOS.version >= :tahoe ? headers_path : "=#{Formula["tidy-html5"].opt_prefix}"
 
     # `_www` only exists on macOS.
     fpm_user = OS.mac? ? "_www" : "www-data"
@@ -171,7 +173,7 @@ class TinyPhp < Formula
       --with-snmp=#{Formula["net-snmp"].opt_prefix}
       --with-sodium
       --with-sqlite3
-      --with-tidy#{headers_path}
+      --with-tidy#{tidy_path}
       --with-unixODBC
       --with-xsl
       --with-zip
