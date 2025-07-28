@@ -7,7 +7,7 @@ tap "phusion/passenger"
 # untap "homebrew/bundle"
 # untap "homebrew/services"
 
- # required by brew itself
+# required by brew itself
 brew "gh"
 brew "mas"
 
@@ -61,7 +61,7 @@ brew "doxygen"
 brew "geckodriver"
 brew "getargv/tap/libgetargv"
 brew "git-delta"
-brew "gpgme" # passenger
+brew "gpgme" # passenger dev
 brew "hyperfine"
 brew "imagemagick" # rails
 brew "camjn/fixed/fakeapxs" # tiny_php
@@ -75,7 +75,7 @@ brew "pkgconf"
 brew "postgresql@17", link: true
 brew "swift-format"
 brew "wasm-pack"
-brew "wrk" # passenger
+brew "wrk" # passenger testing
 
 # general
 brew "bat"
@@ -114,14 +114,16 @@ mas "Reeder", id: 1529448980
 cask_args appdir: "/Applications", require_sha: true, language: "en-CA"
 
 # cask 'sketch' # cannot use latest version with my license... https://download.sketch.com/sketch-75-129697.zip
-# cask "vmware-fusion" # removed due to broadcom requiring a login
 cask "1password-cli"
-# 1password 8 is electron crap
-cask "1password@7"
-cask "blender"
-# cask 'dolphin'
 cask "firefox@developer-edition", args: { require_sha: false }
 cask "tower"
 
-#require "rbconfig"
-#cask "container" RbConfig::CONFIG['host_cpu'] == 'arm64' # I'd prefer a formula... like swiftly
+if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == 'arm64'
+  # cask "container"  # I'd prefer a formula... like swiftly
+  # cask 'dolphin'
+  cask "utm"
+else
+  # cask "blender" # not often used
+  # cask "vmware-fusion" # removed due to broadcom requiring a login
+  cask "1password@7" # 1password 8 is electron crap
+end
