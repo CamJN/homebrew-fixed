@@ -120,10 +120,9 @@ cask "tower"
 
 if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == 'arm64'
   # cask "container"  # I'd prefer a formula... like swiftly
-  # cask 'dolphin'
   cask "utm"
 else
-  # cask "blender" # not often used
   # cask "vmware-fusion" # removed due to broadcom requiring a login
+  cask "blender" # not often used
   cask "1password@7" # 1password 8 is electron crap
 end
