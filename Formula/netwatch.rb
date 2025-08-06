@@ -15,6 +15,8 @@ class Netwatch < Formula
     chmod "ugo+x", buildpath/file
     bin.install file
 
+    var.mkpath
+
     etc.install "etc/netwatchrc"
   end
 
