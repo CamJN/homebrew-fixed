@@ -358,7 +358,7 @@ class TinyPhp < Formula
   end
 
   def codesign
-    %Q{codesign -s "#{identity}" --keychain ~/Library/Keychains/#{keychain}.keychain-db #{opt_lib}/httpd/modules/libphp.so}
+    %Q{codesign -fs "#{identity}" --keychain ~/Library/Keychains/#{keychain}.keychain-db #{opt_lib}/httpd/modules/libphp.so}
   end
 
   def caveats
