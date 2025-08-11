@@ -79,6 +79,7 @@ brew "wrk" # passenger testing
 
 # general
 brew "bat"
+brew "batt" if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == 'arm64'
 brew "camjn/fixed/pam-duress", args: ["HEAD"]
 brew "dnsmasq"
 brew "dust"
