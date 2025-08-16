@@ -9,7 +9,7 @@ function desc {
     local name="${2##*/}"
     echo "$2"
     if [ "$type" = "formulae" ]; then
-        awk '$1 == "desc" {$1="";print $0}' "${HOMEBREW_PREFIX}/opt/${name}/.brew/${name}.rb" | tr -d '"' | sed -e 's/^ /\t/'
+        awk '$1 == "desc" {$1="";print $0}' "$(ls "${HOMEBREW_PREFIX}"/Cellar/${name}/*/.brew/${name}.rb | head -1)" | tr -d '"' | sed -e 's/^ /\t/'
     elif file="$(compgen -G "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/*/*/Casks/${name}.json")"; then
         jq -r '.desc' "$file" | sed -e 's/^/\t/'
     else
