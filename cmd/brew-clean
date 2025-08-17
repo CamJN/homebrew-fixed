@@ -6,4 +6,4 @@ boottime=$(sysctl -n kern.boottime | sed -e 's/.* sec *= *\([0-9][0-9]*\).*/\1/'
 output='map({name:.name, installed:.installed | max_by(.time).time})[] | select(.installed > ($boottime|tonumber)) | .name'
 count=$(tr -dc '/' <<< "$HOMEBREW_CELLAR/" | wc -c)
 
-brew cleanup -n | grep -Fe "$HOMEBREW_CELLAR/" -e 'would free' | tee /dev/stderr | cut -d/ -f$((count + 1)) | grep -Fxf <(brew list --pinned) | sort -u | xargs brew info --json --formulae | jq --arg boottime "$boottime" --raw-output "$output" | xargs echo "==> pinned formulae found:"
+brew cleanup -n | grep -Fe "$HOMEBREW_CELLAR/" -e 'would free' | tee /dev/stderr | cut -d/ -f$((count + 1)) | grep -Fxf <(brew list --pinned) | sort -u | xargs brew info --json --formulae | jq --arg boottime "$boottime" --raw-output "$output" | xargs echo "==> pinned formulae updated since last reboot:"
