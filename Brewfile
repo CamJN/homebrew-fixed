@@ -102,6 +102,8 @@ brew "tree"
 brew "wget"
 brew "xz"
 brew "yt-dlp"
+brew "awscli"
+brew "lume"
 
 mas "1Blocker", id: 1365531024
 mas "Keynote", id: 409183694
