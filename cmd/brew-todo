@@ -1,6 +1,8 @@
 #!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
 
-outdated="$(brew outdated --json=v2)"
+set -e
+
+outdated="$(brew outdated --json=v2 | jq -c .)"
 # shellcheck disable=SC2016
 output='.[$type].[] | "\(.name)\t(\(.installed_versions | join(", "))) < \(.current_version)\(if .pinned then " [pinned at: " + .pinned_version + "]" else "" end):\($descriptions[.name])"'
 
@@ -9,7 +11,7 @@ function desc {
     local name="${2##*/}"
     echo "$2"
     if [ "$type" = "formulae" ]; then
-        awk '$1 == "desc" {$1="";print $0}' "$(ls "${HOMEBREW_PREFIX}"/Cellar/${name}/*/.brew/${name}.rb | head -1)" | tr -d '"' | sed -e 's/^ /\t/'
+        awk '$1 == "desc" {$1="";print $0}' "$(ls "${HOMEBREW_PREFIX}/Cellar/${name}/"*"/.brew/${name}.rb" | head -1)" | tr -d '"' | sed -e 's/^ /\t/'
     elif file="$(compgen -G "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/*/*/Casks/${name}.json")"; then
         jq -r '.desc' "$file" | sed -e 's/^/\t/'
     else
@@ -19,7 +21,8 @@ function desc {
 
 function show_outdated {
     type="$1"
-    if [ "$(jq -r ".$type | length" <<< "$outdated")" -gt 0 ]; then
+    count="$(jq --arg type "$type" -r '.[$type] | length' <<< "$outdated")"
+    if [ "${count:-0}" -gt 0 ]; then
         echo "Outdated $type:"
     else
         return 0
