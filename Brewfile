@@ -103,7 +103,6 @@ brew "wget"
 brew "xz"
 brew "yt-dlp"
 brew "awscli"
-brew "lume"
 
 mas "1Blocker", id: 1365531024
 mas "Keynote", id: 409183694
@@ -123,7 +122,7 @@ cask "tower"
 
 if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == 'arm64'
   # cask "container"  # I'd prefer a formula... like swiftly
-  cask "utm"
+  brew "lume"
 else
   # cask "vmware-fusion" # removed due to broadcom requiring a login
   cask "blender" # not often used
