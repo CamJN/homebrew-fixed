@@ -79,7 +79,6 @@ brew "wrk" # passenger testing
 
 # general
 brew "bat"
-brew "batt" if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == 'arm64'
 brew "camjn/fixed/pam-duress", args: ["HEAD"]
 brew "dnsmasq"
 brew "dust"
@@ -123,6 +122,7 @@ cask "tower"
 if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == 'arm64'
   # cask "container"  # I'd prefer a formula... like swiftly
   brew "lume"
+  brew "batt"
 else
   # cask "vmware-fusion" # removed due to broadcom requiring a login
   cask "blender" # not often used
