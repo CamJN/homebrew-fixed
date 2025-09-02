@@ -2,7 +2,18 @@
 
 set -e
 
+failure() {
+    local retVal=$?
+    echo "\`$BASH_COMMAND\` failed on line ${1}." && exit $retVal
+}
+
+trap 'failure ${LINENO}' ERR
+
 outdated="$(brew outdated --json=v2 | jq -c .)"
+if [ -z "$outdated" ]; then
+    echo "brew outdated failed"
+    exit 1
+fi
 # shellcheck disable=SC2016
 output='.[$type].[] | "\(.name)\t(\(.installed_versions | join(", "))) < \(.current_version)\(if .pinned then " [pinned at: " + .pinned_version + "]" else "" end):\($descriptions[.name])"'
 
@@ -11,7 +22,7 @@ function desc {
     local name="${2##*/}"
     echo "$2"
     if [ "$type" = "formulae" ]; then
-        awk '$1 == "desc" {$1="";print $0}' "$(ls "${HOMEBREW_PREFIX}/Cellar/${name}/"*"/.brew/${name}.rb" | head -1)" | tr -d '"' | sed -e 's/^ /\t/'
+        awk '$1 == "desc" {$1="";print $0}' "$(compgen -G "${HOMEBREW_PREFIX}/Cellar/${name}/*/.brew/${name}.rb" | head -1)" | tr -d '"' | sed -e 's/^ /\t/'
     elif file="$(compgen -G "${HOMEBREW_PREFIX}/Caskroom/${name}/.metadata/*/*/Casks/${name}.json")"; then
         jq -r '.desc' "$file" | sed -e 's/^/\t/'
     else
