@@ -1,5 +1,5 @@
-tap "camjn/fixed", "git@github.com:CamJN/homebrew-fixed.git"
-tap "getargv/tap", "git@github.com:getargv/homebrew-tap.git"
+tap "camjn/fixed", "https://github.com/CamJN/homebrew-fixed"
+tap "getargv/tap", "https://github.com/getargv/homebrew-tap"
 tap "oven-sh/bun"
 tap "phusion/passenger"
 
@@ -10,16 +10,6 @@ tap "phusion/passenger"
 # required by brew itself
 brew "gh"
 brew "mas"
-
-# emacs
-brew "emacs"
-brew "aspell"
-brew "bash-language-server"
-brew "gopls"
-brew "pyright"
-brew "rust-analyzer"
-brew "shellcheck"
-brew "yaml-language-server"
 
 # bash
 brew "bash"
@@ -32,6 +22,16 @@ brew "rails-completion"
 brew "rake-completion"
 brew "ruby-completion"
 brew "rustc-completion"
+
+# emacs
+brew "emacs"
+brew "aspell"
+brew "bash-language-server"
+brew "gopls"
+brew "pyright"
+brew "rust-analyzer"
+brew "shellcheck"
+brew "yaml-language-server"
 
 # docker
 brew "colima"
