@@ -48,7 +48,6 @@ brew "dotnet"
 brew "go"
 brew "llvm"
 brew "node"
-brew "node@20" # passenger library
 brew "openjdk"
 brew "oven-sh/bun/bun"
 brew "python@3.13"
