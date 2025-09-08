@@ -32,6 +32,7 @@ brew "pyright"
 brew "rust-analyzer"
 brew "shellcheck"
 brew "yaml-language-server"
+brew "typescript-language-server"
 
 # docker
 brew "colima"
