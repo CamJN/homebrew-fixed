@@ -4,11 +4,13 @@ set -e
 
 failure() {
     local retVal=$?
-    echo "\`$BASH_COMMAND\` failed on line ${1}." && exit $retVal
+    echo "\`$BASH_COMMAND\` failed on line ${1}."
+    exit $retVal
 }
 
 trap 'failure ${LINENO}' ERR
 
+brew update &>/dev/null
 outdated="$(brew outdated --json=v2 | jq -c .)"
 if [ -z "$outdated" ]; then
     echo "brew outdated failed"
