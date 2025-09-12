@@ -80,7 +80,9 @@ brew "wrk" # passenger testing
 # general
 brew "awscli"
 brew "bat"
+brew "camjn/fixed/alias-path"
 brew "camjn/fixed/pam-duress", args: ["HEAD"]
+brew "camjn/fixed/top-notch"
 brew "dnsmasq"
 brew "dust"
 brew "eza"
