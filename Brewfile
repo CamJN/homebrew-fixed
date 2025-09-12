@@ -24,15 +24,15 @@ brew "ruby-completion"
 brew "rustc-completion"
 
 # emacs
-brew "emacs"
 brew "aspell"
 brew "bash-language-server"
+brew "emacs"
 brew "gopls"
 brew "pyright"
 brew "rust-analyzer"
 brew "shellcheck"
-brew "yaml-language-server"
 brew "typescript-language-server"
+brew "yaml-language-server"
 
 # docker
 brew "colima"
@@ -42,42 +42,43 @@ brew "docker-compose"
 brew "docker-credential-helper"
 
 # dev
-brew "camjn/fixed/tiny_php"
-brew "swiftly"
-brew "dotnet"
-brew "go"
-brew "llvm"
-brew "node"
-brew "openjdk"
-brew "oven-sh/bun/bun"
-brew "python@3.13"
-brew "rustup"
-brew "rbenv"
-brew "rbenv-default-gems"
 brew "bear"
+brew "camjn/fixed/fakeapxs" # tiny_php
+brew "camjn/fixed/tiny_php"
 brew "criterion"
 brew "difftastic"
+brew "dotnet"
 brew "doxygen"
 brew "geckodriver"
 brew "getargv/tap/libgetargv"
 brew "git-delta"
+brew "go"
 brew "gpgme" # passenger dev
 brew "hyperfine"
 brew "imagemagick" # rails
-brew "camjn/fixed/fakeapxs" # tiny_php
+brew "llvm"
 brew "mailpit"
 brew "maven"
 brew "nginx"
+brew "node"
+brew "openjdk"
 brew "openssl@3"
+brew "oven-sh/bun/bun"
 brew "passenger", link: false
 brew "phusion/passenger/passenger-enterprise"
 brew "pkgconf"
 brew "postgresql@17", link: true
+brew "python@3.13"
+brew "rbenv"
+brew "rbenv-default-gems"
+brew "rustup"
 brew "swift-format"
+brew "swiftly"
 brew "wasm-pack"
 brew "wrk" # passenger testing
 
 # general
+brew "awscli"
 brew "bat"
 brew "camjn/fixed/pam-duress", args: ["HEAD"]
 brew "dnsmasq"
@@ -101,7 +102,6 @@ brew "tree"
 brew "wget"
 brew "xz"
 brew "yt-dlp"
-brew "awscli"
 
 mas "1Blocker", id: 1365531024
 mas "Keynote", id: 409183694
