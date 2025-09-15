@@ -5,7 +5,7 @@ class PamDuress < Formula
   license "LGPL-3.0-or-later"
   head "https://github.com/nuvious/pam-duress.git", branch: "main"
 
-  depends_on "pkg-config" => :build
+  depends_on "pkgconf" => :build
   depends_on "openssl@3"
 
   def install
@@ -13,10 +13,10 @@ class PamDuress < Formula
       s.gsub! "/usr/local", prefix
     end
 
-    system "make", "CC=clang", "PAM_DIR=pam"
+    system "make", "CC=clang", "PAM_DIR=security"
 
-    (lib/"pam").mkpath
-    (lib/"pam").install "bin/pam_duress.so"
+    (lib/"security").mkpath
+    (lib/"security").install "bin/pam_duress.so"
     bin.install "bin/duress_sign"
     bin.install "bin/pam_test"
   end
