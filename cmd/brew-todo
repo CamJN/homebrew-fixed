@@ -10,7 +10,9 @@ failure() {
 
 trap 'failure ${LINENO}' ERR
 
-brew update &>/dev/null
+if [ $# -eq 0 ]; then
+    brew update &>/dev/null
+fi
 outdated="$(brew outdated --json=v2 | jq -c .)"
 if [ -z "$outdated" ]; then
     echo "brew outdated failed"
