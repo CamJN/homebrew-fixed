@@ -2,16 +2,31 @@
 class TinyPhp < Formula
   desc "General-purpose scripting language"
   homepage "https://www.php.net/"
-  url Formula["php"].stable.url
-  Formula["php"].stable.mirrors.each do |m|
-    # RUBOCOP: Disabled because homebrew is stupid
-    mirror m # rubocop:disable FormulaAudit/Urls,Style/DisableCopsWithinSourceCodeDirective
-  end
-  sha256 Formula["php"].stable.checksum.hexdigest
   license "PHP-3.01"
 
+  stable do
+    # Should only be updated if the new version is announced on the homepage, https://www.php.net/
+    url Formula["php"].stable.url
+    Formula["php"].stable.mirrors.each do |m|
+      # RUBOCOP: Disabled because homebrew is stupid
+      mirror m # rubocop:disable FormulaAudit/Urls,Style/DisableCopsWithinSourceCodeDirective
+    end
+    sha256 Formula["php"].stable.checksum.hexdigest
+
+    # Fix naming clash with libxml macro
+    # https://github.com/php/php-src/pull/19832
+    patch do
+      url "https://github.com/php/php-src/commit/24a03a2fb14f4b1b16fd2bdb296fc874a4e49cac.patch?full_index=1"
+      sha256 "84daba52c50deca17ffa739e43dcc0ac3a8c264e42b61891bf8f9effd299a3da"
+    end
+
+    # Backport fix for curl 8.16 on macOS. This is the following .diff without NEWS file
+    # https://github.com/php/php-src/commit/8e1df69d34568c92d3920dc9fb22c490542d4fe0.diff
+    patch :DATA
+  end
+
   livecheck do
-    url "https://www.php.net/downloads"
+    url "https://www.php.net/downloads?source=Y"
     regex(/href=.*?php[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
@@ -26,9 +41,7 @@ class TinyPhp < Formula
   depends_on "argon2"
   depends_on "autoconf"
   depends_on "fakeapxs"
-  depends_on "gettext"
   depends_on "gmp"
-  depends_on "icu4c@77"
   depends_on "libpq"
   depends_on "libsodium"
   depends_on "libzip"
@@ -44,7 +57,6 @@ class TinyPhp < Formula
   uses_from_macos "xz" => :build
   uses_from_macos "bzip2"
   uses_from_macos "curl"
-  uses_from_macos "krb5"
   uses_from_macos "libedit"
   uses_from_macos "libffi", since: :catalina
   uses_from_macos "libxml2"
@@ -55,9 +67,7 @@ class TinyPhp < Formula
   uses_from_macos "zlib"
 
   on_macos do
-    # PHP build system incorrectly links system libraries
-    # see https://github.com/php/php-src/issues/10680
-    patch :DATA
+    depends_on "gettext"
   end
 
   conflicts_with "php", because: "a better integrated php than HomeBrew provides"
@@ -98,8 +108,6 @@ class TinyPhp < Formula
     # Identify build provider in php -v output and phpinfo()
     ENV["PHP_BUILD_PROVIDER"] = tap&.user || ENV["USER"]
 
-    # system pkg-config missing
-    ENV["KERBEROS_CFLAGS"] = " "
     if OS.mac?
       ENV["SASL_CFLAGS"] = "-I#{MacOS.sdk_path_if_needed}/usr/include/sasl"
       ENV["SASL_LIBS"] = "-lsasl2"
@@ -126,13 +134,13 @@ class TinyPhp < Formula
       --with-config-file-path=#{config_path}
       --with-config-file-scan-dir=#{config_path}/conf.d
       --with-pear=#{pkgshare}/pear
+      --disable-intl
       --enable-bcmath
       --enable-calendar
       --enable-dba
       --enable-exif
       --enable-ftp
       --enable-fpm
-      --enable-intl
       --enable-mbregex
       --enable-mbstring
       --enable-mysqlnd
@@ -205,18 +213,17 @@ class TinyPhp < Formula
     extension_dir = Utils.safe_popen_read(bin/"php-config", "--extension-dir").chomp
     orig_ext_dir = File.basename(extension_dir)
     inreplace bin/"php-config", lib/"php", prefix/"pecl"
-    %w[development production].each do |mode|
-      inreplace "php.ini-#{mode}", %r{; ?extension_dir = "\./"},
-        "extension_dir = \"#{HOMEBREW_PREFIX}/lib/php/pecl/#{orig_ext_dir}\""
-    end
 
-    # Use OpenSSL cert bundle
     openssl = Formula["openssl@3"]
     %w[development production].each do |mode|
-      inreplace "php.ini-#{mode}", /; ?openssl\.cafile=/,
-        "openssl.cafile = \"#{openssl.pkgetc}/cert.pem\""
-      inreplace "php.ini-#{mode}", /; ?openssl\.capath=/,
-        "openssl.capath = \"#{openssl.pkgetc}/certs\""
+      inreplace "php.ini-#{mode}" do |s|
+        # Allow pecl to install outside of Cellar
+        s.gsub! %r{; ?extension_dir = "\./"}, "extension_dir = \"#{HOMEBREW_PREFIX}/lib/php/pecl/#{orig_ext_dir}\""
+
+        # Use OpenSSL cert bundle
+        s.gsub!(/; ?openssl\.cafile=/, "openssl.cafile = \"#{openssl.pkgetc}/cert.pem\"")
+        s.gsub!(/; ?openssl\.capath=/, "openssl.capath = \"#{openssl.pkgetc}/certs\"")
+      end
     end
 
     config_files = {
@@ -263,6 +270,7 @@ class TinyPhp < Formula
     extension_dir = Utils.safe_popen_read(bin/"php-config", "--extension-dir").chomp
     php_basename = File.basename(extension_dir)
     php_ext_dir = opt_prefix/"lib/php"/php_basename
+    (pecl_path/php_basename).mkpath
 
     # fix pear config to install outside cellar
     pear_path = HOMEBREW_PREFIX/"share/pear"
@@ -293,12 +301,12 @@ class TinyPhp < Formula
       extension_type = (e == "opcache") ? "zend_extension" : "extension"
       if ext_config_path.exist?
         inreplace ext_config_path,
-          /#{extension_type}=.*$/, ";#{extension_type}=#{php_ext_dir}/#{e}.so"
+          /#{extension_type}=.*$/, "#{extension_type}=#{php_ext_dir}/#{e}.so"
       else
-        ext_config_path.write <<~EOS
+        ext_config_path.write <<~INI
           [#{e}]
-          ;#{extension_type}=#{php_ext_dir}/#{e}.so
-        EOS
+          #{extension_type}="#{php_ext_dir}/#{e}.so"
+        INI
       end
     end
   end
@@ -393,11 +401,8 @@ class TinyPhp < Formula
   end
 
   test do
-    assert_match(
-      /^Zend OPcache$/,
-      shell_output("#{bin}/php -d zend_extension=#{Dir[opt_lib/"php/*/opcache.so"].first} -i"),
-      "Zend OPCache extension not loaded",
-    )
+    assert_match(/^Zend OPcache$/, shell_output("#{bin}/php -i"),
+      "Zend OPCache extension not loaded")
     # Test related to libxml2 and
     # https://github.com/Homebrew/homebrew-core/issues/28398
     assert_includes (bin/"php").dynamically_linked_libraries,
@@ -406,6 +411,7 @@ class TinyPhp < Formula
     system "#{sbin}/php-fpm", "-t"
     system bin/"phpdbg", "-V"
     system bin/"php-cgi", "-m"
+
     begin
       port = free_port
       port_fpm = free_port
@@ -443,7 +449,7 @@ class TinyPhp < Formula
         </FilesMatch>
       EOS
 
-      (testpath/"fpm.conf").write <<~EOS
+      (testpath/"fpm.conf").write <<~INI
         [global]
         daemonize=no
         [www]
@@ -453,7 +459,7 @@ class TinyPhp < Formula
         pm.start_servers = 2
         pm.min_spare_servers = 1
         pm.max_spare_servers = 3
-      EOS
+      INI
 
       (testpath/"httpd-fpm.conf").write <<~EOS
         #{main_config}
@@ -466,24 +472,16 @@ class TinyPhp < Formula
         </FilesMatch>
       EOS
 
-      pid = fork do
-        exec "httpd", "-X", "-f", "#{testpath}/httpd.conf"
-      end
+      pid = spawn "httpd", "-X", "-f", "#{testpath}/httpd.conf"
       sleep 10
-
       assert_match expected_output, shell_output("curl -s 127.0.0.1:#{port}")
 
       Process.kill("TERM", pid)
       Process.wait(pid)
 
-      fpm_pid = fork do
-        exec sbin/"php-fpm", "-y", "fpm.conf"
-      end
-      pid = fork do
-        exec "httpd", "-X", "-f", "#{testpath}/httpd-fpm.conf"
-      end
+      fpm_pid = spawn sbin/"php-fpm", "-y", "fpm.conf"
+      pid = spawn "httpd", "-X", "-f", "#{testpath}/httpd-fpm.conf"
       sleep 10
-
       assert_match expected_output, shell_output("curl -s 127.0.0.1:#{port}")
     ensure
       if pid
@@ -540,4 +538,87 @@ index 36c6e5e3e2..71b1a16607 100644
  PHP_ARG_ENABLE([rpath],
    [whether to enable runpaths],
    [AS_HELP_STRING([--disable-rpath],
+diff --git a/ext/curl/interface.c b/ext/curl/interface.c
+index 4b0391541f3b..7cd8795c936e 100644
+--- a/ext/curl/interface.c
++++ b/ext/curl/interface.c
+@@ -643,10 +643,10 @@ static int curl_fnmatch(void *ctx, const char *pattern, const char *string)
+ /* }}} */
+ 
+ /* {{{ curl_progress */
+-static size_t curl_progress(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)
++static int curl_progress(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)
+ {
+ 	php_curl *ch = (php_curl *)clientp;
+-	size_t	rval = 0;
++	int rval = 0;
+ 
+ #if PHP_CURL_DEBUG
+ 	fprintf(stderr, "curl_progress() called\n");
+@@ -681,10 +681,10 @@ static size_t curl_progress(void *clientp, double dltotal, double dlnow, double
+ /* }}} */
+ 
+ /* {{{ curl_xferinfo */
+-static size_t curl_xferinfo(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
++static int curl_xferinfo(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+ {
+ 	php_curl *ch = (php_curl *)clientp;
+-	size_t rval = 0;
++	int rval = 0;
+ 
+ #if PHP_CURL_DEBUG
+ 	fprintf(stderr, "curl_xferinfo() called\n");
+@@ -1190,8 +1190,8 @@ static void _php_curl_set_default_options(php_curl *ch)
+ {
+ 	char *cainfo;
+ 
+-	curl_easy_setopt(ch->cp, CURLOPT_NOPROGRESS,        1);
+-	curl_easy_setopt(ch->cp, CURLOPT_VERBOSE,           0);
++	curl_easy_setopt(ch->cp, CURLOPT_NOPROGRESS,        1L);
++	curl_easy_setopt(ch->cp, CURLOPT_VERBOSE,           0L);
+ 	curl_easy_setopt(ch->cp, CURLOPT_ERRORBUFFER,       ch->err.str);
+ 	curl_easy_setopt(ch->cp, CURLOPT_WRITEFUNCTION,     curl_write);
+ 	curl_easy_setopt(ch->cp, CURLOPT_FILE,              (void *) ch);
+@@ -1199,8 +1199,8 @@ static void _php_curl_set_default_options(php_curl *ch)
+ 	curl_easy_setopt(ch->cp, CURLOPT_INFILE,            (void *) ch);
+ 	curl_easy_setopt(ch->cp, CURLOPT_HEADERFUNCTION,    curl_write_header);
+ 	curl_easy_setopt(ch->cp, CURLOPT_WRITEHEADER,       (void *) ch);
+-	curl_easy_setopt(ch->cp, CURLOPT_DNS_CACHE_TIMEOUT, 120);
+-	curl_easy_setopt(ch->cp, CURLOPT_MAXREDIRS, 20); /* prevent infinite redirects */
++	curl_easy_setopt(ch->cp, CURLOPT_DNS_CACHE_TIMEOUT, 120L);
++	curl_easy_setopt(ch->cp, CURLOPT_MAXREDIRS, 20L); /* prevent infinite redirects */
+ 
+ 	cainfo = INI_STR("openssl.cafile");
+ 	if (!(cainfo && cainfo[0] != '\0')) {
+@@ -2216,7 +2216,7 @@ static zend_result _php_curl_setopt(php_curl *ch, zend_long option, zval *zvalue
+ 					/* no need to build the mime structure for empty hashtables;
+ 					   also works around https://github.com/curl/curl/issues/6455 */
+ 					curl_easy_setopt(ch->cp, CURLOPT_POSTFIELDS, "");
+-					error = curl_easy_setopt(ch->cp, CURLOPT_POSTFIELDSIZE, 0);
++					error = curl_easy_setopt(ch->cp, CURLOPT_POSTFIELDSIZE, 0L);
+ 				} else {
+ 					return build_mime_structure_from_hash(ch, zvalue);
+ 				}
+@@ -2249,7 +2249,7 @@ static zend_result _php_curl_setopt(php_curl *ch, zend_long option, zval *zvalue
+ 
+ 		case CURLOPT_POSTREDIR:
+ 			lval = zval_get_long(zvalue);
+-			error = curl_easy_setopt(ch->cp, CURLOPT_POSTREDIR, lval & CURL_REDIR_POST_ALL);
++			error = curl_easy_setopt(ch->cp, CURLOPT_POSTREDIR, (long) (lval & CURL_REDIR_POST_ALL));
+ 			break;
+ 
+ 		/* the following options deal with files, therefore the open_basedir check
+@@ -2289,11 +2289,11 @@ static zend_result _php_curl_setopt(php_curl *ch, zend_long option, zval *zvalue
+ 			if (zend_is_true(zvalue)) {
+ 				curl_easy_setopt(ch->cp, CURLOPT_DEBUGFUNCTION, curl_debug);
+ 				curl_easy_setopt(ch->cp, CURLOPT_DEBUGDATA, (void *)ch);
+-				curl_easy_setopt(ch->cp, CURLOPT_VERBOSE, 1);
++				curl_easy_setopt(ch->cp, CURLOPT_VERBOSE, 1L);
+ 			} else {
+ 				curl_easy_setopt(ch->cp, CURLOPT_DEBUGFUNCTION, NULL);
+ 				curl_easy_setopt(ch->cp, CURLOPT_DEBUGDATA, NULL);
+-				curl_easy_setopt(ch->cp, CURLOPT_VERBOSE, 0);
++				curl_easy_setopt(ch->cp, CURLOPT_VERBOSE, 0L);
+ 			}
+ 			break;
 
