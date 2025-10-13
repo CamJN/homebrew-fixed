@@ -7,6 +7,7 @@ class AliasPath < Formula
   head "https://github.com/CamJN/aliasPath.git", branch: "main"
 
   def install
+    ENV["SDKROOT"] = MacOS.sdk_path(MacOSVersion.from_symbol(:tahoe)) if MacOS.version < :tahoe
     system "make", 'OTHER_SWIFT_FLAGS=--disable-sandbox', "PREFIX=#{prefix}", "build"
     bin_path=`swift build --configuration release --show-bin-path`.strip
     bin.install "#{bin_path}/aliasPath"
