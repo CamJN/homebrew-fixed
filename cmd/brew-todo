@@ -13,13 +13,14 @@ trap 'failure ${LINENO}' ERR
 if [ $# -eq 0 ]; then
     brew update &>/dev/null
 fi
+declare outdated
 outdated="$(brew outdated --json=v2 | jq -c .)"
 if [ -z "$outdated" ]; then
     echo "brew outdated failed"
     exit 1
 fi
 # shellcheck disable=SC2016
-output='.[$type].[] | "\(.name)\t(\(.installed_versions | join(", "))) < \(.current_version)\(if .pinned then " [pinned at: " + .pinned_version + "]" else "" end):\($descriptions[.name])"'
+declare output='.[$type].[] | "\(.name)\t(\(.installed_versions | join(", "))) < \(.current_version)\(if .pinned then " [pinned at: " + .pinned_version + "]" else "" end):\($descriptions[.name])"'
 
 function desc {
     local type="$1"
@@ -35,7 +36,8 @@ function desc {
 }
 
 function show_outdated {
-    type="$1"
+    local type="$1"
+    local -i count
     count="$(jq --arg type "$type" -r '.[$type] | length' <<< "$outdated")"
     if [ "${count:-0}" -gt 0 ]; then
         echo "Outdated $type:"
@@ -43,6 +45,7 @@ function show_outdated {
         return 0
     fi
     #slow: descriptions=$(jq --arg type "$type" -r '.[$type].[].name' <<< "$outdated" | xargs brew desc "--${type}" | tr ':' '\n' | jq -n -R 'reduce inputs as $i ({}; . + { ($i): input })')
+    local descriptions
     descriptions=$(jq --arg type "$type" -r '.[$type].[].name' <<< "$outdated" | while read -r name; do desc "$type" "$name"; done | jq -n -R 'reduce inputs as $i ({}; . + { ($i): input })')
 
     jq --argjson descriptions "$descriptions" --arg type "$type" -r "$output" <<< "$outdated" | column -ts $'\t'
