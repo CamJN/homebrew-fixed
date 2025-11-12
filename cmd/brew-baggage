@@ -1,8 +1,3 @@
 #!/usr/bin/env -P /usr/local/bin:/opt/homebrew/bin bash
 
-for pkg in $(brew list --installed-as-dependency); do
-    du -hd 0 "$HOMEBREW_CELLAR/${pkg##*/}"
-    #echo "$(du -hd 0 "$HOMEBREW_CELLAR/${pkg##*/}"): $(brew uses --installed $pkg)";
-done |
-    sort -h |
-    sed -E -e "s|$HOMEBREW_CELLAR/||g"
+brew list --installed-as-dependency | xargs brew info --sizes | sort --sort=human-numeric --key=2
