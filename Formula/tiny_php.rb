@@ -110,7 +110,7 @@ class TinyPhp < Formula
     # sdk path or it won't find the headers
     headers_path = "=#{MacOS.sdk_path_if_needed}/usr" if OS.mac?
 
-    tidy_path = MacOS.version >= :tahoe ? headers_path : "=#{Formula["tidy-html5"].opt_prefix}"
+    tidy_path = (MacOS.version >= :tahoe) ? headers_path : "=#{Formula["tidy-html5"].opt_prefix}"
 
     # `_www` only exists on macOS.
     fpm_user = OS.mac? ? "_www" : "www-data"
@@ -301,7 +301,7 @@ class TinyPhp < Formula
   end
 
   def identity?
-    `security find-identity -v -p codesigning | cut -d'"' -f2 | grep -Fve " valid identit" -e " CA" | tail -n1 | tr -d "\n"`
+    `security find-identity -v -p codesigning`.lines.grep_v(/ valid identit/).last.split('"')[1]
   end
 
   def identity
@@ -310,6 +310,7 @@ class TinyPhp < Formula
 
   def make_identity
     return if identity?
+
     <<-EOS
 
   Create a code signing authority:
@@ -355,7 +356,9 @@ class TinyPhp < Formula
   end
 
   def codesign
-    %Q{codesign -fs "#{identity}" --keychain ~/Library/Keychains/#{keychain}.keychain-db #{opt_lib}/httpd/modules/libphp.so}
+    lib_path = opt_lib/"httpd/modules/libphp.so"
+    keychain_path = "~/Library/Keychains/#{keychain}.keychain-db"
+    %Q(codesign -fs "#{identity}" --keychain #{keychain_path} "#{lib_path}")
   end
 
   def caveats

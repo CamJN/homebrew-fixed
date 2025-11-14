@@ -127,7 +127,7 @@ cask "1password-cli"
 cask "firefox@developer-edition", args: { require_sha: false }
 cask "tower"
 
-if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == 'arm64'
+if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == "arm64"
   # cask "container"  # I'd prefer a formula... like swiftly
   brew "lume"
   brew "batt"
