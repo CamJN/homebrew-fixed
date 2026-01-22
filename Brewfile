@@ -1,4 +1,5 @@
 tap "camjn/fixed", "https://github.com/CamJN/homebrew-fixed"
+tap "cirruslabs/cli", "https://github.com/cirruslabs/homebrew-cli"
 tap "getargv/tap", "https://github.com/getargv/homebrew-tap"
 tap "oven-sh/bun"
 tap "phusion/passenger"
@@ -129,10 +130,11 @@ cask "tower"
 
 if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == "arm64"
   # cask "container"  # I'd prefer a formula... like swiftly
-  brew "lume"
+  brew "cirruslabs/cli/tart"
   brew "batt"
 else
   # cask "vmware-fusion" # removed due to broadcom requiring a login
   cask "blender" # not often used
   cask "1password@7" # 1password 8 is electron crap
 end
+
