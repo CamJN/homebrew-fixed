@@ -113,12 +113,12 @@ brew "xz"
 brew "yt-dlp"
 
 mas "1Blocker", id: 1365531024
-mas "Keynote", id: 409183694
-mas "Numbers", id: 409203825
-mas "Pages", id: 409201541
+mas "Keynote", id: 361285480
+mas "Numbers", id: 361304891
+mas "Pages", id: 361309726
 mas "Pixelmator Pro", id: 1289583905
 mas "Reeder", id: 1529448980
-# mas "Xcode", id: 497799835
+mas "Xcode", id: 497799835
 # mas "Apple Configurator 2", id: 1037126344
 
 cask_args appdir: "/Applications", require_sha: true, language: "en-CA"
