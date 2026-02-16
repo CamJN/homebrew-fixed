@@ -301,7 +301,7 @@ class TinyPhp < Formula
   end
 
   def identity?
-    `security find-identity -v -p codesigning`.lines.grep_v(/ valid identit/).last.split('"')[1]
+    `security find-identity -v -p codesigning`.lines.grep_v(/ valid identit/).last&.split('"')&.fetch(1)
   end
 
   def identity
