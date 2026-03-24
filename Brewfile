@@ -129,12 +129,8 @@ cask "firefox@developer-edition", args: { require_sha: false }
 cask "tower"
 
 if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == "arm64"
-  # cask "container"  # I'd prefer a formula... like swiftly
+  # remove once lima's macos support improves
   brew "cirruslabs/cli/tart"
-  brew "batt"
 else
-  # cask "vmware-fusion" # removed due to broadcom requiring a login
-  cask "blender" # not often used
   cask "1password@7" # 1password 8 is electron crap
 end
-
