@@ -27,7 +27,7 @@ brew "rustc-completion"
 # emacs
 brew "aspell"
 brew "bash-language-server"
-brew "dockerfile-language-server"
+brew "docker-language-server"
 brew "emacs"
 brew "gopls"
 brew "jdtls"
