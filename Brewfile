@@ -22,7 +22,6 @@ brew "maven-completion"
 brew "rails-completion"
 brew "rake-completion"
 brew "ruby-completion"
-brew "rustc-completion"
 
 # emacs
 brew "aspell"
@@ -85,7 +84,6 @@ brew "wrk" # passenger testing
 brew "awscli"
 brew "bat"
 brew "camjn/fixed/alias-path"
-brew "camjn/fixed/pam-duress", args: ["HEAD"]
 brew "camjn/fixed/segment-dumper"
 brew "camjn/fixed/top-notch"
 brew "dnsmasq"
