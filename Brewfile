@@ -1,5 +1,7 @@
 tap "camjn/fixed", "https://github.com/CamJN/homebrew-fixed"
+if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == "arm64"
 tap "cirruslabs/cli", "https://github.com/cirruslabs/homebrew-cli"
+end
 tap "getargv/tap", "https://github.com/getargv/homebrew-tap"
 tap "oven-sh/bun"
 tap "phusion/passenger"
