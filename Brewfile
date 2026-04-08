@@ -73,7 +73,7 @@ brew "passenger", link: false
 brew "phusion/passenger/passenger-enterprise"
 brew "pkgconf"
 brew "postgresql@18", link: true
-brew "python@3.13"
+brew "python@3.14"
 brew "rbenv"
 brew "rbenv-default-gems"
 brew "rustup"
