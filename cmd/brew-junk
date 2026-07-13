@@ -21,9 +21,7 @@ if [[ ${#dep_packages[@]} -gt 0 ]]; then
 fi
 
 declare -a deps_in_brewfile
-# The `--installed-as-dependency` switch is deprecated! Use --no-installed-on-request instead.
-#brew ls --no-installed-on-request | grep -Fvxf <(brew ls --installed-on-request) | grep -Fxf <(awk '/^brew /{print $2}' "$HOMEBREW_BUNDLE_FILE" | tr -d '",') | mapfile -t deps_in_brewfile
-brew ls --installed-as-dependency | grep -Fvxf <(brew ls --installed-on-request) | grep -Fxf <(awk '/^brew /{print $2}' "$HOMEBREW_BUNDLE_FILE" | tr -d '",') | mapfile -t deps_in_brewfile
+brew list --no-installed-on-request | grep -Fxvf <(brew list --installed-on-request) | grep -Fxf <(awk '/^brew /{print $2}' "$HOMEBREW_BUNDLE_FILE" | tr -d '",') | mapfile -t deps_in_brewfile
 
 if [[ ${#deps_in_brewfile[@]} -gt 0 ]]; then
     echo -e "\nRemove from Brewfile:"
