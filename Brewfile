@@ -1,6 +1,6 @@
 tap "camjn/fixed", "https://github.com/CamJN/homebrew-fixed"
 if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == "arm64"
-tap "cirruslabs/cli", "https://github.com/cirruslabs/homebrew-cli"
+tap "openai/tools", "https://github.com/openai/homebrew-tools"
 end
 tap "getargv/tap", "https://github.com/getargv/homebrew-tap"
 tap "oven-sh/bun"
@@ -130,7 +130,7 @@ cask "tower"
 
 if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == "arm64"
   # remove once lima's macos support improves
-  brew "cirruslabs/cli/tart"
+  brew "openai/tools/tart"
 else
   cask "1password@7" # 1password 8 is electron crap
 end
