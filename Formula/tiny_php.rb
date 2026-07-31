@@ -42,9 +42,10 @@ class TinyPhp < Formula
   depends_on "openldap" => :optional
   depends_on "icu4c@78" => :optional
 
-  uses_from_macos "xz" => :build
+  uses_from_macos "cyrus-sasl" => :build
   uses_from_macos "bzip2"
   uses_from_macos "curl"
+  uses_from_macos "httpd"
   uses_from_macos "libedit"
   uses_from_macos "libffi"
   uses_from_macos "libxml2"
@@ -107,26 +108,21 @@ class TinyPhp < Formula
     # Prevent system pear config from inhibiting pear install
     (config_path/"pear.conf").delete if (config_path/"pear.conf").exist?
 
-    # Prevent homebrew from hardcoding path to sed shim in phpize script
-    ENV["lt_cv_path_SED"] = "sed"
-
     # Identify build provider in php -v output and phpinfo()
     ENV["PHP_BUILD_PROVIDER"] = tap&.user || ENV["USER"]
 
     if OS.mac?
-      ENV["SASL_CFLAGS"] = "-I#{MacOS.sdk_path_if_needed}/usr/include/sasl"
+      sdk_path = MacOS.sdk_for_formula(self).path
+      ENV["SASL_CFLAGS"] = "-I#{sdk_path}/usr/include/sasl"
       ENV["SASL_LIBS"] = "-lsasl2"
+
+      # Each extension needs a direct reference to the sdk path or it won't find the headers
+      headers_path = "=#{sdk_path}/usr"
+      # gettext_path = "=#{formula_opt_prefix("gettext")}"
+      tidy_path = (MacOS.version >= :tahoe) ? headers_path : "=#{formula_opt_prefix("tidy-html5")}"
     else
-      ENV["SQLITE_CFLAGS"] = "-I#{Formula["sqlite"].opt_include}"
-      ENV["SQLITE_LIBS"] = "-lsqlite3"
-      ENV["BZIP_DIR"] = Formula["bzip2"].opt_prefix
+      ENV["BZIP_DIR"] = formula_opt_prefix("bzip2")
     end
-
-    # Each extension that is built on Mojave needs a direct reference to the
-    # sdk path or it won't find the headers
-    headers_path = "=#{MacOS.sdk_path_if_needed}/usr" if OS.mac?
-
-    tidy_path = (MacOS.version >= :tahoe) ? headers_path : "=#{Formula["tidy-html5"].opt_prefix}"
 
     # `_www` only exists on macOS.
     fpm_user = OS.mac? ? "_www" : "www-data"
@@ -224,13 +220,13 @@ class TinyPhp < Formula
     orig_ext_dir = File.basename(extension_dir)
     inreplace bin/"php-config", lib/"php", prefix/"pecl"
     inreplace ["php.ini-development", "php.ini-production"] do |s|
-        s.gsub! %r{; ?extension_dir = "\./"}, "extension_dir = \"#{HOMEBREW_PREFIX}/lib/php/pecl/#{orig_ext_dir}\""
+      s.gsub! %r{; ?extension_dir = "\./"}, "extension_dir = \"#{HOMEBREW_PREFIX}/lib/php/pecl/#{orig_ext_dir}\""
 
-        # Use OpenSSL cert bundle
+      # Use OpenSSL cert bundle
       openssl = Formula["openssl@3"]
-        s.gsub!(/; ?openssl\.cafile=/, "openssl.cafile = \"#{openssl.pkgetc}/cert.pem\"")
-        s.gsub!(/; ?openssl\.capath=/, "openssl.capath = \"#{openssl.pkgetc}/certs\"")
-      end
+      s.gsub!(/; ?openssl\.cafile=/, "openssl.cafile = \"#{openssl.pkgetc}/cert.pem\"")
+      s.gsub!(/; ?openssl\.capath=/, "openssl.capath = \"#{openssl.pkgetc}/certs\"")
+    end
 
     config_files = {
       "php.ini-development"   => "php.ini",
@@ -424,64 +420,65 @@ class TinyPhp < Formula
     system bin/"phpdbg", "-V"
     system bin/"php-cgi", "-m"
 
-      port = free_port
-      port_fpm = free_port
-      expected_output = /^Hello world!$/
+    port = free_port
+    port_fpm = free_port
+    expected_output = /^Hello world!$/
 
-      function = build.with?("openldap")? "ldap_connect()" : "phpinfo()"
+    function = build.with?("openldap")? "ldap_connect()" : "phpinfo()"
 
-      (testpath/"index.php").write <<~PHP
-        <?php
-        echo 'Hello world!' . PHP_EOL;
-        var_dump(#{function});
-        $session = new SNMP(SNMP::VERSION_1, '127.0.0.1', 'public');
-        var_dump(@$session->get('sysDescr.0'));
-      PHP
+    (testpath/"index.php").write <<~PHP
+      <?php
+      echo 'Hello world!' . PHP_EOL;
+      var_dump(#{function});
+      $session = new SNMP(SNMP::VERSION_1, '127.0.0.1', 'public');
+      var_dump(@$session->get('sysDescr.0'));
+    PHP
 
-      main_config = <<~EOS
+    main_config = <<~EOS
         Listen #{port}
         ServerName localhost:#{port}
         DocumentRoot "#{testpath}"
         ErrorLog "#{testpath}/httpd-error.log"
         ServerRoot "/usr"
         PidFile "#{testpath}/httpd.pid"
+        Mutex file:#{testpath} default
         LoadModule authz_core_module libexec/apache2/mod_authz_core.so
         LoadModule unixd_module libexec/apache2/mod_unixd.so
         LoadModule dir_module libexec/apache2/mod_dir.so
         DirectoryIndex index.php
-      EOS
+    EOS
 
-      (testpath/"httpd.conf").write <<~EOS
-        #{main_config}
+    (testpath/"httpd.conf").write <<~EOS
+      #{main_config}
         LoadModule mpm_prefork_module libexec/apache2/mod_mpm_prefork.so
         LoadModule php_module #{lib}/httpd/modules/libphp.so "#{identity}"
-        <FilesMatch \\.(php|phar)$>
-          SetHandler application/x-httpd-php
-        </FilesMatch>
-      EOS
+      <FilesMatch \\.(php|phar)$>
+        SetHandler application/x-httpd-php
+      </FilesMatch>
+    EOS
 
-      (testpath/"fpm.conf").write <<~INI
-        [global]
-        daemonize=no
-        [www]
-        listen = 127.0.0.1:#{port_fpm}
-        pm = dynamic
-        pm.max_children = 5
-        pm.start_servers = 2
-        pm.min_spare_servers = 1
-        pm.max_spare_servers = 3
-      INI
+    (testpath/"fpm.conf").write <<~INI
+      [global]
+      daemonize=no
+      [www]
+      listen = 127.0.0.1:#{port_fpm}
+      pm = dynamic
+      pm.max_children = 5
+      pm.start_servers = 2
+      pm.min_spare_servers = 1
+      pm.max_spare_servers = 3
+    INI
 
-      (testpath/"httpd-fpm.conf").write <<~EOS
-        #{main_config}
+    (testpath/"httpd-fpm.conf").write <<~EOS
+      #{main_config}
         Mutex posixsem
         LoadModule mpm_event_module libexec/apache2/mod_mpm_event.so
         LoadModule proxy_module libexec/apache2/mod_proxy.so
         LoadModule proxy_fcgi_module libexec/apache2/mod_proxy_fcgi.so
-        <FilesMatch \\.(php|phar)$>
-          SetHandler "proxy:fcgi://127.0.0.1:#{port_fpm}"
-        </FilesMatch>
-      EOS
+      <FilesMatch \\.(php|phar)$>
+        SetHandler "proxy:fcgi://127.0.0.1:#{port_fpm}"
+      </FilesMatch>
+    EOS
 
     begin
       pid = spawn "httpd", "-X", "-f", testpath/"httpd.conf"
