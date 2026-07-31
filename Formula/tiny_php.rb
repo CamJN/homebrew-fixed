@@ -71,8 +71,7 @@ class TinyPhp < Formula
   # deny_network_access! [:build, :postinstall] # fake_apxs needs network access
 
   def install
-    # buildconf required due to system library linking bug patch
-    system "./buildconf", "--force"
+    system "./buildconf", "--force" if build.head? # buildconf was required due to system library linking bug patch, if there are problems remove the `if build.head?`
 
     inreplace "configure" do |s|
       s.gsub! "$APXS_HTTPD -V 2>/dev/null | grep 'threaded:.*yes' >/dev/null 2>&1",
@@ -109,7 +108,7 @@ class TinyPhp < Formula
     (config_path/"pear.conf").delete if (config_path/"pear.conf").exist?
 
     # Identify build provider in php -v output and phpinfo()
-    ENV["PHP_BUILD_PROVIDER"] = tap&.user || ENV["USER"]
+    ENV["PHP_BUILD_PROVIDER"] = tap.user
 
     if OS.mac?
       sdk_path = MacOS.sdk_for_formula(self).path
