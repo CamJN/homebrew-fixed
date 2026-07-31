@@ -9,7 +9,8 @@ class TinyPhp < Formula
     mirror it # rubocop:disable FormulaAudit/Urls,Style/DisableCopsWithinSourceCodeDirective
   end
   sha256 Formula["php"].stable.checksum.hexdigest
-  license "PHP-3.01"
+  license Formula["php"].license
+  compatibility_version Formula["php"].compatibility_version
 
   livecheck do
     url "https://www.php.net/downloads?source=Y"
@@ -39,6 +40,7 @@ class TinyPhp < Formula
   depends_on "gd" => :recommended
   depends_on "freetds" => :optional
   depends_on "openldap" => :optional
+  depends_on "icu4c@78" => :optional
 
   uses_from_macos "xz" => :build
   uses_from_macos "bzip2"
@@ -59,7 +61,13 @@ class TinyPhp < Formula
     depends_on "gettext"
   end
 
+  on_linux do
+    depends_on "zlib-ng-compat"
+  end
+
   conflicts_with "php", because: "a better integrated php than HomeBrew provides"
+
+  # deny_network_access! [:build, :postinstall] # fake_apxs needs network access
 
   def install
     # buildconf required due to system library linking bug patch
@@ -72,6 +80,14 @@ class TinyPhp < Formula
               "APXS_LIBEXECDIR='$(INSTALL_ROOT)#{lib}/httpd/modules'"
       s.gsub! "-z $($APXS -q SYSCONFDIR)",
               "-z ''"
+
+      # NOTE: `versioned_formula?` conditionals are to make sure correct changes
+      # are applied if copied from `php`. Remove dead code when creating `php@x.y`
+      if versioned_formula?
+        # apxs will interpolate the @ in the versioned prefix: https://bz.apache.org/bugzilla/show_bug.cgi?id=61944
+        s.gsub! "LIBEXECDIR='$APXS_LIBEXECDIR'",
+                "LIBEXECDIR='" + "#{lib}/httpd/modules".gsub("\\", "\\\\").gsub("@", "\\@") + "'"
+      end
     end
 
     # Update error message in apache sapi to better explain the requirements
@@ -123,7 +139,6 @@ class TinyPhp < Formula
       --with-config-file-path=#{config_path}
       --with-config-file-scan-dir=#{config_path}/conf.d
       --with-pear=#{pkgshare}/pear
-      --disable-intl
       --enable-bcmath
       --enable-calendar
       --enable-dba
@@ -153,8 +168,8 @@ class TinyPhp < Formula
       --with-gmp=#{Formula["gmp"].opt_prefix}
       --with-iconv#{headers_path}
       --with-layout=GNU
-      --with-libxml
       --with-libedit
+      --with-libxml
       --with-mhash#{headers_path}
       --with-mysql-sock=/tmp/mysql.sock
       --with-mysqli=mysqlnd
@@ -178,6 +193,12 @@ class TinyPhp < Formula
     ]
     args << "--with-ldap=#{Formula["openldap"].opt_prefix}" if build.with? "openldap"
     args << "--with-pdo-dblib=#{Formula["freetds"].opt_prefix}" if build.with? "freetds"
+
+    if build.with? "icu4c@78"
+      args << "--enable-intl"
+    else
+      args << "--disable-intl"
+    end
     if build.with? "gd"
       args << "--enable-gd"
       args << "--with-external-gd"
@@ -186,7 +207,7 @@ class TinyPhp < Formula
     if OS.mac?
       args << "--enable-dtrace"
       args << "--with-ldap-sasl" if build.with? "openldap"
-      args << "--with-os-sdkpath=#{MacOS.sdk_path_if_needed}"
+      args << "--with-os-sdkpath=#{MacOS.sdk_for_formula(self).path}"
     else
       args << "--disable-dtrace"
       args << "--without-ldap-sasl" if build.with? "openldap"
@@ -202,18 +223,14 @@ class TinyPhp < Formula
     extension_dir = Utils.safe_popen_read(bin/"php-config", "--extension-dir").chomp
     orig_ext_dir = File.basename(extension_dir)
     inreplace bin/"php-config", lib/"php", prefix/"pecl"
-
-    openssl = Formula["openssl@3"]
-    %w[development production].each do |mode|
-      inreplace "php.ini-#{mode}" do |s|
-        # Allow pecl to install outside of Cellar
+    inreplace ["php.ini-development", "php.ini-production"] do |s|
         s.gsub! %r{; ?extension_dir = "\./"}, "extension_dir = \"#{HOMEBREW_PREFIX}/lib/php/pecl/#{orig_ext_dir}\""
 
         # Use OpenSSL cert bundle
+      openssl = Formula["openssl@3"]
         s.gsub!(/; ?openssl\.cafile=/, "openssl.cafile = \"#{openssl.pkgetc}/cert.pem\"")
         s.gsub!(/; ?openssl\.capath=/, "openssl.capath = \"#{openssl.pkgetc}/certs\"")
       end
-    end
 
     config_files = {
       "php.ini-development"   => "php.ini",
@@ -258,11 +275,11 @@ class TinyPhp < Formula
     ln_s pecl_path, prefix/"pecl" unless (prefix/"pecl").exist?
     extension_dir = Utils.safe_popen_read(bin/"php-config", "--extension-dir").chomp
     php_basename = File.basename(extension_dir)
-    php_ext_dir = opt_prefix/"lib/php"/php_basename
     (pecl_path/php_basename).mkpath
 
     # fix pear config to install outside cellar
-    pear_path = HOMEBREW_PREFIX/"share/pear"
+    pear_dir = versioned_formula? ? "pear@#{version.major_minor}" : "pear"
+    pear_path = HOMEBREW_PREFIX/"share"/pear_dir
     cp_r pkgshare/"pear/.", pear_path
     {
       "php_ini"  => etc/"php/#{version.major_minor}/php.ini",
@@ -283,6 +300,8 @@ class TinyPhp < Formula
 
     system bin/"pear", "update-channels"
 
+    # added by cam, extensions don't exist
+    php_ext_dir = opt_prefix/"lib/php"/php_basename
     %w[
       opcache
     ].each do |e|
@@ -298,6 +317,7 @@ class TinyPhp < Formula
         INI
       end
     end
+    # end added by cam
   end
 
   def identity?
@@ -393,21 +413,19 @@ class TinyPhp < Formula
   end
 
   test do
-    assert_match(/^Zend OPcache$/, shell_output("#{bin}/php -i"),
-      "Zend OPCache extension not loaded")
-    # Test related to libxml2 and
-    # https://github.com/Homebrew/homebrew-core/issues/28398
-    assert_includes (bin/"php").dynamically_linked_libraries,
-                    (Formula["libpq"].opt_lib/shared_library("libpq", 5)).to_s
+    assert_match(/^Zend OPcache$/, shell_output("#{bin}/php -i"), "Zend OPCache extension not loaded")
 
-    system "#{sbin}/php-fpm", "-t"
+    # Test related to libxml2 and https://github.com/Homebrew/homebrew-core/issues/28398
+    require "utils/linkage"
+    libpq = formula_opt_lib("libpq")/shared_library("libpq")
+    assert Utils.binary_linked_to_library?(bin/"php", libpq), "No linkage with Homebrew #{libpq.basename}!"
+
+    system sbin/"php-fpm", "-t"
     system bin/"phpdbg", "-V"
     system bin/"php-cgi", "-m"
 
-    begin
       port = free_port
       port_fpm = free_port
-
       expected_output = /^Hello world!$/
 
       function = build.with?("openldap")? "ldap_connect()" : "phpinfo()"
@@ -419,6 +437,7 @@ class TinyPhp < Formula
         $session = new SNMP(SNMP::VERSION_1, '127.0.0.1', 'public');
         var_dump(@$session->get('sysDescr.0'));
       PHP
+
       main_config = <<~EOS
         Listen #{port}
         ServerName localhost:#{port}
@@ -464,7 +483,8 @@ class TinyPhp < Formula
         </FilesMatch>
       EOS
 
-      pid = spawn "httpd", "-X", "-f", "#{testpath}/httpd.conf"
+    begin
+      pid = spawn "httpd", "-X", "-f", testpath/"httpd.conf"
       sleep 10
       assert_match expected_output, shell_output("curl -s 127.0.0.1:#{port}")
 
@@ -472,7 +492,7 @@ class TinyPhp < Formula
       Process.wait(pid)
 
       fpm_pid = spawn sbin/"php-fpm", "-y", "fpm.conf"
-      pid = spawn "httpd", "-X", "-f", "#{testpath}/httpd-fpm.conf"
+      pid = spawn "httpd", "-X", "-f", testpath/"httpd-fpm.conf"
       sleep 10
       assert_match expected_output, shell_output("curl -s 127.0.0.1:#{port}")
     ensure
