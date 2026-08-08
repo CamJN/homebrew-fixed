@@ -58,7 +58,6 @@ brew "geckodriver"
 brew "getargv/tap/libgetargv"
 brew "git-delta"
 brew "go"
-brew "gpgme" # passenger dev
 brew "hyperfine"
 brew "imagemagick" # rails
 brew "llvm"
@@ -69,7 +68,6 @@ brew "node"
 brew "openjdk"
 brew "openssl@3"
 brew "oven-sh/bun/bun"
-brew "passenger", link: false
 brew "phusion/passenger/passenger-enterprise"
 brew "pkgconf"
 brew "postgresql@18", link: true
@@ -80,7 +78,10 @@ brew "rustup"
 brew "swift-format"
 brew "swiftly"
 brew "wasm-pack"
-brew "wrk" # passenger testing
+
+# passenger dev
+brew "gpgme"
+brew "wrk"
 
 # general
 brew "awscli"
