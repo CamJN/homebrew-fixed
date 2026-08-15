@@ -113,6 +113,7 @@ brew "wireshark"
 brew "xz"
 brew "yt-dlp"
 
+if ENV["HOMEBREW_PHYSICAL_PROCESSOR"] == "arm64"
 mas "1Blocker", id: 1365531024
 mas "Keynote", id: 361285480
 mas "Numbers", id: 361304891
@@ -121,6 +122,7 @@ mas "Pixelmator Pro", id: 1289583905
 mas "Reeder", id: 1529448980
 mas "Xcode", id: 497799835
 # mas "Apple Configurator 2", id: 1037126344
+end
 
 cask_args appdir: "/Applications", require_sha: true, language: "en-CA"
 
