@@ -3,8 +3,8 @@
 #########################################################################
 
 # derived from:
-# https://raw.githubusercontent.com/Homebrew/homebrew-services/refs/heads/master/completions/bash/brew-services
-# https://raw.githubusercontent.com/Homebrew/brew/refs/heads/master/completions/bash/brew
+# https://raw.githubusercontent.com/Homebrew/homebrew-services/43ec598ee3bd00bdb6878873246c440a8643fdb8/completions/bash/brew-services
+# https://raw.githubusercontent.com/Homebrew/brew/refs/heads/main/completions/bash/brew
 
 # Called once on shell startup
 : "${HOMEBREW_PREFIX:=$(brew --prefix)}"
