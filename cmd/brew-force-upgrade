@@ -2,7 +2,7 @@
 
 if [ $# -eq 0 ]; then
    echo "You forgot to specify a formula" >&2
-   exit -1
+   exit 255
 fi
 
 IFS='|'
@@ -17,6 +17,6 @@ if [ "${#unpinned[@]}" -gt 0 ]; then
 fi
 if [ "${#pinned[@]}" -gt 0 ]; then
     brew unpin "${pinned[@]}"
-    brew upgrade "${pinned[@]}"
+    brew upgrade -y "${pinned[@]}"
     brew pin "${pinned[@]}"
 fi
