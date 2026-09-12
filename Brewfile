@@ -4,7 +4,7 @@ tap "openai/tools", "https://github.com/openai/homebrew-tools"
 end
 tap "getargv/tap", "https://github.com/getargv/homebrew-tap"
 tap "oven-sh/bun"
-tap "phusion/passenger"
+tap "phusion/passenger-enterprise", "https://github.com/phusion/homebrew-passenger-enterprise"
 
 # untap "homebrew/core"
 # untap "homebrew/bundle"
@@ -68,7 +68,7 @@ brew "node"
 brew "openjdk"
 brew "openssl@3"
 brew "oven-sh/bun/bun"
-brew "phusion/passenger/passenger-enterprise"
+brew "phusion/passenger-enterprise/passenger-enterprise"
 brew "pkgconf"
 brew "postgresql@18", link: true
 brew "python@3.14"
